@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="dotsC" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="3.5" cy="3.5" r="1.5" fill="#1a1a1a" opacity="0.24"/>
+      <circle cx="10.5" cy="10.5" r="1.5" fill="#1a1a1a" opacity="0.24"/>
+    </pattern>
+    <linearGradient id="paperC" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f2ecda"/>
+      <stop offset="100%" stop-color="#d3cbb4"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#paperC)"/>
+  <rect width="1200" height="675" fill="url(#dotsC)"/>
+  <rect x="30" y="30" width="1140" height="615" fill="none" stroke="#141414" stroke-width="10"/>
+
+  <polygon points="80,90 1120,90 1060,180 140,180" fill="#111"/>
+  <text x="600" y="151" text-anchor="middle" font-family="Impact, serif" font-size="68" fill="#f2ecda" letter-spacing="4">
+    RIVER OF INK
+  </text>
+
+  <rect x="110" y="220" width="980" height="330" fill="#ebe3cf" stroke="#141414" stroke-width="8"/>
+  <path d="M120 500 C240 440 360 460 480 500 C600 540 720 560 840 500 C920 460 1000 450 1080 480" fill="none" stroke="#151515" stroke-width="16"/>
+  <path d="M220 280 L320 450 L420 330 L520 470 L620 290 L700 430 L780 300 L900 460 L980 340" fill="none" stroke="#111" stroke-width="12"/>
+
+  <rect x="210" y="350" width="390" height="150" fill="#f8f2e4" stroke="#111" stroke-width="6"/>
+  <text x="405" y="404" text-anchor="middle" font-family="Georgia, serif" font-size="32" fill="#111">
+    CHOOSE
+  </text>
+  <text x="405" y="442" text-anchor="middle" font-family="Georgia, serif" font-size="32" fill="#111">
+    YOUR ROUTE
+  </text>
+  <text x="405" y="478" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#222">
+    and face the storm
+  </text>
+
+  <circle cx="860" cy="385" r="85" fill="#f9f3e6" stroke="#111" stroke-width="8"/>
+  <line x1="860" y1="385" x2="860" y2="338" stroke="#111" stroke-width="8"/>
+  <line x1="860" y1="385" x2="906" y2="385" stroke="#111" stroke-width="8"/>
+  <rect x="760" y="490" width="210" height="34" fill="#111"/>
+  <text x="865" y="514" text-anchor="middle" font-family="Georgia, serif" font-size="18" fill="#efe8d6">
+    issue #12
+  </text>
+</svg>

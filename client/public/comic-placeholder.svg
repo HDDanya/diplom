@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#d8d8d8"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="800" fill="#f4f4f4"/>
+  <rect x="40" y="40" width="1120" height="720" fill="url(#dots)" stroke="#111" stroke-width="8"/>
+  <rect x="120" y="130" width="960" height="500" fill="#fff" stroke="#111" stroke-width="5"/>
+  <text x="600" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" fill="#111">INKFLOW</text>
+  <text x="600" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#444">COMIC PANEL PLACEHOLDER</text>
+</svg>

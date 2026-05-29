@@ -1,0 +1,179 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+:root {
+  color-scheme: light;
+  --ink-bg: #f6f6f6;
+  --ink-paper: #ffffff;
+  --ink-border: #171717;
+  --ink-text: #111111;
+  --ink-muted: #5a5a5a;
+  --ink-accent: #292929;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", "Manrope", sans-serif;
+  color: var(--ink-text);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.035), transparent 30%),
+    radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.03), transparent 28%),
+    repeating-linear-gradient(
+      -12deg,
+      rgba(0, 0, 0, 0.022) 0,
+      rgba(0, 0, 0, 0.022) 1px,
+      transparent 1px,
+      transparent 14px
+    ),
+    var(--ink-bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: #1f1f1f;
+  color: #fff;
+}
+
+.ink-grid {
+  border: 2px solid var(--ink-border);
+  background: linear-gradient(135deg, #fff, #f8f8f8);
+  box-shadow: 10px 10px 0 #0f0f0f;
+}
+
+.reader-surface {
+  border: 2px solid #131313;
+  background: #fcfcfc;
+  box-shadow:
+    0 0 0 2px #fff inset,
+    0 28px 80px rgba(0, 0, 0, 0.22);
+}
+
+.comic-sheet-wrap {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.03), transparent 40%),
+    linear-gradient(145deg, #fefefe, #efefef);
+}
+
+.comic-canvas {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.comic-panel {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  border: 3px solid #111;
+  background: #fefefe;
+  box-shadow: 4px 4px 0 #111;
+}
+
+.comic-panel-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(100%) contrast(1.08);
+  transform: scale(1.08);
+}
+
+.comic-panel-ink {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 50%),
+    repeating-linear-gradient(
+      -25deg,
+      rgba(0, 0, 0, 0.14) 0,
+      rgba(0, 0, 0, 0.14) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.comic-caption {
+  position: absolute;
+  max-width: 85%;
+  margin: 0;
+  color: #101010;
+  z-index: 2;
+  font-size: 0.96rem;
+  line-height: 1.36;
+}
+
+.comic-caption.narration {
+  top: 10px;
+  left: 10px;
+  background: #fff;
+  border: 2px solid #111;
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.comic-caption.speech {
+  right: 12px;
+  bottom: 12px;
+  background: #fff;
+  border: 2px solid #111;
+  border-radius: 18px;
+  padding: 10px 12px;
+}
+
+.panel-0 {
+  grid-column: span 4;
+  min-height: 280px;
+}
+
+.panel-1 {
+  grid-column: span 2;
+  min-height: 280px;
+}
+
+.panel-2 {
+  grid-column: span 3;
+}
+
+.panel-3 {
+  grid-column: span 3;
+}
+
+.panel-4 {
+  grid-column: span 2;
+}
+
+.panel-5 {
+  grid-column: span 4;
+}
+
+@media (max-width: 900px) {
+  .comic-canvas {
+    grid-template-columns: 1fr;
+  }
+
+  .comic-panel,
+  .panel-0,
+  .panel-1,
+  .panel-2,
+  .panel-3,
+  .panel-4,
+  .panel-5 {
+    grid-column: span 1;
+    min-height: 220px;
+  }
+
+  .comic-caption {
+    max-width: 92%;
+    font-size: 0.88rem;
+  }
+}

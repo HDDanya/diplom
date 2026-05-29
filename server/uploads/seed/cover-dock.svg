@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ededed"/>
+      <stop offset="100%" stop-color="#b9b9b9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <rect x="38" y="38" width="1124" height="599" fill="none" stroke="#111" stroke-width="12"/>
+  <rect x="0" y="420" width="1200" height="255" fill="#d7d7d7"/>
+  <path d="M0 470 C300 430 900 530 1200 470" fill="none" stroke="#111" stroke-width="5"/>
+  <path d="M0 520 C350 480 850 560 1200 520" fill="none" stroke="#111" stroke-width="4"/>
+  <rect x="120" y="250" width="320" height="170" fill="#f7f7f7" stroke="#111" stroke-width="8"/>
+  <rect x="470" y="220" width="280" height="200" fill="#f7f7f7" stroke="#111" stroke-width="8"/>
+  <rect x="790" y="260" width="300" height="160" fill="#f7f7f7" stroke="#111" stroke-width="8"/>
+  <line x1="190" y1="250" x2="190" y2="170" stroke="#111" stroke-width="6"/>
+  <line x1="540" y1="220" x2="540" y2="140" stroke="#111" stroke-width="6"/>
+  <line x1="870" y1="260" x2="870" y2="180" stroke="#111" stroke-width="6"/>
+  <text x="600" y="118" text-anchor="middle" font-family="monospace" font-size="62" fill="#111">
+    MIDNIGHT DOCK
+  </text>
+  <text x="600" y="612" text-anchor="middle" font-family="monospace" font-size="30" fill="#222">
+    InkFlow preset cover
+  </text>
+</svg>

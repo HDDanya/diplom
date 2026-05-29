@@ -1,0 +1,13 @@
+node_modules
+.pnpm-store
+.env
+.env.*
+!.env.example
+client/dist
+server/dist
+server/node_modules
+client/node_modules
+coverage
+.DS_Store
+.vscode
+.idea

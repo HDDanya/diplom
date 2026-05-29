@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ComicStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TransitionStyle {
+  NONE
+  SLIDE_LEFT
+  SLIDE_RIGHT
+  FADE
+  ZOOM
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String
+  displayName    String
+  bio            String?
+  avatarUrl      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  comics         Comic[]
+  bookmarks      ComicBookmark[]
+  readProgress   ReadProgress[]
+}
+
+model Comic {
+  id             String          @id @default(uuid())
+  slug           String          @unique
+  title          String
+  summary        String
+  script         String?
+  coverImageUrl  String?
+  status         ComicStatus     @default(DRAFT)
+  authorId       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  author         User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pages          ComicPage[]
+  bookmarks      ComicBookmark[]
+  readProgress   ReadProgress[]
+}
+
+model ComicPage {
+  id               String            @id @default(uuid())
+  comicId          String
+  pageKey          String
+  title            String
+  body             String
+  imageUrl         String?
+  sketchPrompt     String?
+  transitionStyle  TransitionStyle   @default(SLIDE_LEFT)
+  position         Int
+  isStart          Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  comic            Comic             @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  outgoingChoices  ComicChoice[]     @relation("OutgoingChoices")
+  incomingChoices  ComicChoice[]     @relation("IncomingChoices")
+  progressEntries  ReadProgress[]
+
+  @@unique([comicId, pageKey])
+  @@index([comicId, position])
+}
+
+model ComicChoice {
+  id            String     @id @default(uuid())
+  pageId        String
+  label         String
+  targetPageId  String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  page          ComicPage  @relation("OutgoingChoices", fields: [pageId], references: [id], onDelete: Cascade)
+  targetPage    ComicPage  @relation("IncomingChoices", fields: [targetPageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([targetPageId])
+}
+
+model ComicBookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  comicId    String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic      Comic    @relation(fields: [comicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, comicId])
+}
+
+model ReadProgress {
+  id            String    @id @default(uuid())
+  userId        String
+  comicId       String
+  currentPageId String
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic         Comic     @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  currentPage   ComicPage @relation(fields: [currentPageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, comicId])
+}

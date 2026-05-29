@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="dotsA" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.4" fill="#2b2b2b" opacity="0.35"/>
+      <circle cx="9" cy="9" r="1.4" fill="#2b2b2b" opacity="0.35"/>
+    </pattern>
+    <linearGradient id="paperA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#efeadb"/>
+      <stop offset="100%" stop-color="#d9d2bf"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#paperA)"/>
+  <rect width="1200" height="675" fill="url(#dotsA)"/>
+  <rect x="28" y="28" width="1144" height="619" fill="none" stroke="#161616" stroke-width="10"/>
+  <rect x="64" y="64" width="1072" height="108" fill="#111"/>
+  <text x="600" y="132" text-anchor="middle" font-family="Georgia, serif" font-size="66" fill="#f5f0e2" letter-spacing="3">
+    CITY DETECTIVE
+  </text>
+
+  <rect x="100" y="210" width="430" height="360" fill="#f1ecdd" stroke="#151515" stroke-width="8"/>
+  <rect x="560" y="210" width="540" height="360" fill="#ebe5d3" stroke="#151515" stroke-width="8"/>
+  <path d="M150 540 L230 300 L300 420 L370 260 L460 540 Z" fill="#202020"/>
+  <circle cx="280" cy="265" r="46" fill="#f7f3e6" stroke="#111" stroke-width="8"/>
+  <line x1="280" y1="265" x2="280" y2="238" stroke="#111" stroke-width="6"/>
+  <line x1="280" y1="265" x2="308" y2="265" stroke="#111" stroke-width="6"/>
+
+  <path d="M620 530 Q700 440 790 490 Q870 540 950 470 Q1010 430 1060 520" fill="none" stroke="#151515" stroke-width="16"/>
+  <path d="M610 340 C690 250 780 240 860 285 C930 320 1010 300 1080 240" fill="none" stroke="#111" stroke-width="12"/>
+  <rect x="670" y="350" width="370" height="130" fill="#f8f5ea" stroke="#111" stroke-width="6"/>
+  <text x="855" y="402" text-anchor="middle" font-family="Georgia, serif" font-size="35" fill="#111">
+    WHO OWNS THE NIGHT?
+  </text>
+  <text x="855" y="442" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#222">
+    issue #07
+  </text>
+
+  <rect x="94" y="596" width="1012" height="38" fill="#111"/>
+  <text x="600" y="623" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#f0eadb" letter-spacing="2">
+    vintage halftone crime comic template
+  </text>
+</svg>
