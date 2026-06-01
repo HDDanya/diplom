@@ -8,6 +8,7 @@ const pageInputSchema = z.object({
   title: z.string().min(1).max(120),
   body: z.string().min(1).max(4000),
   imageUrl: z.string().max(500).optional().or(z.literal("")),
+  panelImageUrls: z.array(z.string().max(500)).max(12).optional().default([]),
   sketchPrompt: z.string().max(240).optional().or(z.literal("")),
   transitionStyle: z.nativeEnum(TransitionStyle).default(TransitionStyle.SLIDE_LEFT),
   position: z.number().int().min(1),
@@ -134,6 +135,10 @@ async function replaceComicGraph(
           title: page.title,
           body: page.body,
           imageUrl: page.imageUrl || null,
+          panelImageUrls: page.panelImageUrls
+            .map((imageUrl) => imageUrl.trim())
+            .filter(Boolean)
+            .slice(0, 12),
           sketchPrompt: page.sketchPrompt || null,
           transitionStyle: page.transitionStyle,
           position: page.position,
@@ -378,6 +383,7 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
           title: page.title,
           body: page.body,
           imageUrl: page.imageUrl,
+          panelImageUrls: Array.isArray((page as any).panelImageUrls) ? (page as any).panelImageUrls : [],
           sketchPrompt: page.sketchPrompt,
           transitionStyle: page.transitionStyle,
           position: page.position,
@@ -460,6 +466,7 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
           title: page.title,
           body: page.body,
           imageUrl: page.imageUrl,
+          panelImageUrls: Array.isArray((page as any).panelImageUrls) ? (page as any).panelImageUrls : [],
           sketchPrompt: page.sketchPrompt,
           transitionStyle: page.transitionStyle,
           position: page.position,

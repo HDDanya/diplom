@@ -48,6 +48,29 @@ a {
   box-shadow: 10px 10px 0 #0f0f0f;
 }
 
+.comic-list-card {
+  min-height: 100%;
+}
+
+.comic-cover-box {
+  height: 230px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7;
+  border-bottom: 2px solid #111;
+  overflow: hidden;
+}
+
+.comic-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.06) saturate(1.04);
+}
+
 .reader-surface {
   border: 2px solid #131313;
   background: #fcfcfc;
@@ -75,6 +98,8 @@ a {
   border: 3px solid #111;
   background: #fefefe;
   box-shadow: 4px 4px 0 #111;
+  transform-origin: center center;
+  isolation: isolate;
 }
 
 .comic-panel-image {
@@ -82,23 +107,18 @@ a {
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: grayscale(100%) contrast(1.08);
-  transform: scale(1.08);
+  filter: saturate(1.08) contrast(1.08);
+  transform: scale(1.04);
 }
 
 .comic-panel-ink {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 50%),
-    repeating-linear-gradient(
-      -25deg,
-      rgba(0, 0, 0, 0.14) 0,
-      rgba(0, 0, 0, 0.14) 1px,
-      transparent 1px,
-      transparent 12px
-    );
-  mix-blend-mode: multiply;
+    radial-gradient(circle at 80% 18%, rgba(255, 255, 255, 0.18), transparent 54%),
+    radial-gradient(circle at 12% 90%, rgba(0, 0, 0, 0.16), transparent 45%);
+  mix-blend-mode: soft-light;
+  opacity: 0.7;
   pointer-events: none;
 }
 
@@ -108,26 +128,41 @@ a {
   margin: 0;
   color: #101010;
   z-index: 2;
-  font-size: 0.96rem;
-  line-height: 1.36;
+  font-size: 1rem;
+  line-height: 1.42;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
 }
 
 .comic-caption.narration {
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   background: #fff;
   border: 2px solid #111;
-  padding: 8px 10px;
+  padding: 10px 12px;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .comic-caption.speech {
-  right: 12px;
-  bottom: 12px;
+  right: 14px;
+  bottom: 14px;
   background: #fff;
   border: 2px solid #111;
-  border-radius: 18px;
-  padding: 10px 12px;
+  border-radius: 20px;
+  padding: 11px 14px;
+}
+
+.comic-caption.speech::after {
+  content: "";
+  position: absolute;
+  right: 22px;
+  bottom: -14px;
+  width: 16px;
+  height: 16px;
+  border-left: 2px solid #111;
+  border-bottom: 2px solid #111;
+  background: #fff;
+  transform: skew(-18deg) rotate(-12deg);
 }
 
 .panel-0 {
@@ -154,6 +189,200 @@ a {
 
 .panel-5 {
   grid-column: span 4;
+}
+
+.comic-canvas .comic-panel {
+  animation-duration: 560ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.comic-canvas .comic-panel:nth-child(1) {
+  animation-delay: 20ms;
+}
+
+.comic-canvas .comic-panel:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.comic-canvas .comic-panel:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.comic-canvas .comic-panel:nth-child(4) {
+  animation-delay: 200ms;
+}
+
+.comic-canvas .comic-panel:nth-child(5) {
+  animation-delay: 260ms;
+}
+
+.comic-canvas .comic-panel:nth-child(6) {
+  animation-delay: 320ms;
+}
+
+.comic-canvas--slide-left .comic-panel,
+.comic-canvas--slide-right .comic-panel {
+  animation-name: panelSlide;
+}
+
+.comic-canvas--fade .comic-panel {
+  animation-name: panelFadeIn;
+}
+
+.comic-canvas--zoom .comic-panel {
+  animation-name: panelZoomIn;
+}
+
+.comic-canvas--page-flip .comic-panel {
+  animation-name: panelPageFlip;
+  transform-origin: left center;
+}
+
+.comic-canvas--vertical-reveal .comic-panel {
+  animation-name: panelVerticalReveal;
+}
+
+.comic-canvas--glitch-cut .comic-panel {
+  animation-name: panelGlitchCut;
+}
+
+.comic-canvas--whip-pan .comic-panel {
+  animation-name: panelWhipPan;
+}
+
+.comic-canvas--ink-bleed .comic-panel {
+  animation-name: panelInkBleed;
+}
+
+.comic-canvas--parallax-sweep .comic-panel {
+  animation-name: panelParallaxSweep;
+}
+
+.comic-canvas--none .comic-panel {
+  animation-name: panelNone;
+  animation-duration: 120ms;
+  animation-delay: 0ms;
+}
+
+@keyframes panelNone {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panelSlide {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes panelZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes panelPageFlip {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-24deg) translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translateX(0);
+  }
+}
+
+@keyframes panelVerticalReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes panelGlitchCut {
+  0% {
+    opacity: 0;
+    transform: translateX(20px) skewX(8deg);
+    filter: contrast(0.8);
+  }
+  40% {
+    transform: translateX(-8px) skewX(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+    filter: contrast(1);
+  }
+}
+
+@keyframes panelWhipPan {
+  from {
+    opacity: 0;
+    transform: translateX(90px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes panelInkBleed {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+    filter: contrast(0.85);
+  }
+  60% {
+    opacity: 1;
+    filter: contrast(1.2);
+  }
+  to {
+    transform: scale(1);
+    filter: contrast(1);
+  }
+}
+
+@keyframes panelParallaxSweep {
+  from {
+    opacity: 0;
+    transform: translate3d(54px, 14px, 0) rotate(-1.2deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
 }
 
 @media (max-width: 900px) {

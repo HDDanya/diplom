@@ -68,7 +68,7 @@ export function ComicDetailsPage() {
           src={resolveAssetUrl(comic.coverImageUrl) || "/comic-placeholder.svg"}
           alt={comic.title}
           fallbackSrc="/comic-placeholder.svg"
-          style={{ filter: "grayscale(100%)" }}
+          style={{ filter: "contrast(1.06) saturate(1.04)" }}
         />
         <Stack p="lg" gap="sm">
           <Group justify="space-between" align="start">

@@ -22,6 +22,9 @@ function normalizePage(rawPage: any): ComicPage {
     title: String(rawPage?.title ?? ""),
     body: String(rawPage?.body ?? ""),
     imageUrl: rawPage?.imageUrl ?? null,
+    panelImageUrls: Array.isArray(rawPage?.panelImageUrls)
+      ? rawPage.panelImageUrls.map((item: unknown) => String(item)).filter((item: string) => item.length > 0)
+      : [],
     sketchPrompt: rawPage?.sketchPrompt ?? null,
     transitionStyle: rawPage?.transitionStyle ?? "SLIDE_LEFT",
     position: Number.isFinite(rawPage?.position) ? Number(rawPage.position) : 0,

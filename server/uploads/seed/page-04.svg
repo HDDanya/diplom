@@ -1,1 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="#f5f5f5"/><g stroke="#111" stroke-width="6" fill="none"><rect x="140" y="120" width="1320" height="760"/><path d="M220 240 H1380"/><path d="M220 320 H1380"/><path d="M220 400 H1380"/><path d="M220 480 H1380"/><path d="M220 560 H1380"/><path d="M220 640 H1380"/><path d="M220 720 H1380"/><path d="M360 160 V840"/><path d="M620 160 V840"/><path d="M880 160 V840"/><path d="M1140 160 V840"/></g><rect x="180" y="140" width="520" height="120" fill="#fff" stroke="#111" stroke-width="5"/><text x="210" y="218" font-family="Arial" font-size="46" fill="#111">04 • CITY ARCHIVE</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="dots4" width="9" height="9" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#222" opacity="0.26"/>
+      <circle cx="7" cy="7" r="1" fill="#222" opacity="0.26"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="675" fill="#e9e2d0"/>
+  <rect width="1200" height="675" fill="url(#dots4)"/>
+  <rect x="40" y="40" width="1120" height="595" fill="none" stroke="#111" stroke-width="10"/>
+
+  <rect x="120" y="120" width="420" height="430" fill="#f6f1e3" stroke="#111" stroke-width="8"/>
+  <rect x="660" y="120" width="420" height="430" fill="#f2ecdb" stroke="#111" stroke-width="8"/>
+  <line x1="160" y1="170" x2="500" y2="170" stroke="#111" stroke-width="5"/>
+  <line x1="160" y1="230" x2="500" y2="230" stroke="#111" stroke-width="5"/>
+  <line x1="160" y1="290" x2="500" y2="290" stroke="#111" stroke-width="5"/>
+  <line x1="160" y1="350" x2="500" y2="350" stroke="#111" stroke-width="5"/>
+
+  <circle cx="870" cy="260" r="78" fill="#fff" stroke="#111" stroke-width="9"/>
+  <line x1="870" y1="260" x2="870" y2="215" stroke="#111" stroke-width="8"/>
+  <line x1="870" y1="260" x2="915" y2="260" stroke="#111" stroke-width="8"/>
+  <rect x="740" y="390" width="260" height="110" fill="#111"/>
+  <text x="870" y="458" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="#efe7d2">CLUE MAP</text>
+
+  <text x="600" y="610" text-anchor="middle" font-family="Impact, sans-serif" font-size="54" fill="#111">HIDDEN ARCHIVE</text>
+</svg>

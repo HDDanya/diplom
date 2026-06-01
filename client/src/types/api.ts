@@ -1,4 +1,15 @@
-export type TransitionStyle = "NONE" | "SLIDE_LEFT" | "SLIDE_RIGHT" | "FADE" | "ZOOM";
+export type TransitionStyle =
+  | "NONE"
+  | "SLIDE_LEFT"
+  | "SLIDE_RIGHT"
+  | "FADE"
+  | "ZOOM"
+  | "PAGE_FLIP"
+  | "VERTICAL_REVEAL"
+  | "GLITCH_CUT"
+  | "WHIP_PAN"
+  | "INK_BLEED"
+  | "PARALLAX_SWEEP";
 
 export type User = {
   id: string;
@@ -42,6 +53,7 @@ export type ComicPage = {
   title: string;
   body: string;
   imageUrl?: string | null;
+  panelImageUrls: string[];
   sketchPrompt?: string | null;
   transitionStyle: TransitionStyle;
   position: number;
@@ -104,6 +116,7 @@ export type ComicWritePage = {
   title: string;
   body: string;
   imageUrl?: string;
+  panelImageUrls?: string[];
   sketchPrompt?: string;
   transitionStyle: TransitionStyle;
   position: number;

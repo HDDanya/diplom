@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="#f6f6f6"/><g stroke="#111" stroke-width="6" fill="none"><rect x="180" y="180" width="1240" height="640"/><path d="M260 760 L360 340 L560 760 L760 300 L940 760 L1120 360 L1260 760"/><path d="M200 240 H1400"/><path d="M200 340 H1400"/><path d="M200 440 H1400"/><path d="M200 540 H1400"/></g><rect x="180" y="110" width="660" height="120" fill="#fff" stroke="#111" stroke-width="5"/><text x="220" y="188" font-family="Arial" font-size="50" fill="#111">02 • ABANDONED THEATRE</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="halftone2" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1.2" fill="#1f1f1f" opacity="0.24"/>
+      <circle cx="7.5" cy="7.5" r="1.2" fill="#1f1f1f" opacity="0.24"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="675" fill="#ece7d8"/>
+  <rect width="1200" height="675" fill="url(#halftone2)"/>
+  <rect x="35" y="35" width="1130" height="605" fill="none" stroke="#111" stroke-width="10"/>
+
+  <path d="M120 540 C220 410 330 400 430 470 C520 530 620 520 720 450 C820 380 930 390 1040 470" fill="none" stroke="#111" stroke-width="14"/>
+  <rect x="160" y="180" width="880" height="300" fill="#f6f2e6" stroke="#111" stroke-width="8"/>
+  <path d="M190 230 Q600 90 1010 230" fill="none" stroke="#111" stroke-width="7"/>
+  <path d="M190 270 Q600 130 1010 270" fill="none" stroke="#111" stroke-width="5"/>
+  <circle cx="320" cy="360" r="55" fill="#fff" stroke="#111" stroke-width="8"/>
+  <circle cx="600" cy="360" r="55" fill="#fff" stroke="#111" stroke-width="8"/>
+  <circle cx="880" cy="360" r="55" fill="#fff" stroke="#111" stroke-width="8"/>
+
+  <rect x="430" y="520" width="340" height="90" fill="#111"/>
+  <text x="600" y="578" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="#efe7d2">
+    OPERA OF STEEL
+  </text>
+</svg>

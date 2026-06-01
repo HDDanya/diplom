@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Card, Grid, Group, Image, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Badge, Box, Button, Card, Grid, Group, Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconBookmarkFilled, IconPlayerPlay } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,14 +44,15 @@ export function BookmarksPage() {
       <Grid>
         {bookmarksQuery.data?.map((comic) => (
           <Grid.Col span={{ base: 12, md: 6 }} key={comic.id}>
-            <Card className="ink-grid" p={0} radius="md" style={{ overflow: "hidden", height: "100%" }}>
-              <Image
-                h={220}
-                src={resolveAssetUrl(comic.coverImageUrl) || "/comic-placeholder.svg"}
-                alt={comic.title}
-                fallbackSrc="/comic-placeholder.svg"
-                style={{ filter: "grayscale(100%) contrast(1.05)" }}
-              />
+            <Card className="ink-grid comic-list-card" p={0} radius="md" style={{ overflow: "hidden" }}>
+              <Box className="comic-cover-box">
+                <img
+                  className="comic-cover-image"
+                  src={resolveAssetUrl(comic.coverImageUrl) || "/comic-placeholder.svg"}
+                  alt={comic.title}
+                  loading="lazy"
+                />
+              </Box>
 
               <Stack p="md" gap="xs">
                 <Group justify="space-between" align="start">

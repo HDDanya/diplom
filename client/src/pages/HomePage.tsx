@@ -1,11 +1,11 @@
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Card,
   Grid,
   Group,
-  Image,
   Skeleton,
   Stack,
   Text,
@@ -79,14 +79,15 @@ export function HomePage() {
             ))
           : comicsQuery.data?.map((comic) => (
               <Grid.Col span={{ base: 12, md: 6 }} key={comic.id}>
-                <Card className="ink-grid" p={0} radius="md" style={{ overflow: "hidden", height: "100%" }}>
-                  <Image
-                    h={220}
-                    src={resolveAssetUrl(comic.coverImageUrl) || "/comic-placeholder.svg"}
-                    alt={comic.title}
-                    fallbackSrc="/comic-placeholder.svg"
-                    style={{ filter: "grayscale(100%) contrast(1.05)" }}
-                  />
+                <Card className="ink-grid comic-list-card" p={0} radius="md" style={{ overflow: "hidden" }}>
+                  <Box className="comic-cover-box">
+                    <img
+                      className="comic-cover-image"
+                      src={resolveAssetUrl(comic.coverImageUrl) || "/comic-placeholder.svg"}
+                      alt={comic.title}
+                      loading="lazy"
+                    />
+                  </Box>
                   <Stack p="md" gap="xs">
                     <Group justify="space-between" align="start">
                       <Title order={3} ff="Bebas Neue" size="2rem">

@@ -33,103 +33,188 @@ import {
 import { resolveAssetUrl } from "../lib/assets";
 import { ComicDetail, ComicStatus, ComicWritePage, TransitionStyle } from "../types/api";
 
-const TRANSITIONS: TransitionStyle[] = ["SLIDE_LEFT", "SLIDE_RIGHT", "FADE", "ZOOM", "NONE"];
+const TRANSITIONS: TransitionStyle[] = [
+  "SLIDE_LEFT",
+  "SLIDE_RIGHT",
+  "FADE",
+  "ZOOM",
+  "PAGE_FLIP",
+  "VERTICAL_REVEAL",
+  "GLITCH_CUT",
+  "WHIP_PAN",
+  "INK_BLEED",
+  "PARALLAX_SWEEP",
+  "NONE"
+];
+
+const UNIVERSAL_COMIC_WEB_IMAGES = {
+  blueBeetle01: "https://upload.wikimedia.org/wikipedia/commons/7/79/Blue_Beetle_Number_1_Cover.jpg",
+  planet01: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Planet_Comics_01.jpg",
+  planet03: "https://upload.wikimedia.org/wikipedia/commons/e/ef/Planet_Comics_03.jpg",
+  planet05: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Planet_Comics_05.jpg",
+  planet11: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Planet_Comics_11.jpg",
+  planet12: "https://upload.wikimedia.org/wikipedia/commons/1/18/Planet_Comics_12.jpg",
+  planet57: "https://upload.wikimedia.org/wikipedia/commons/6/68/Planet_Comics_57.jpg",
+  planet69: "https://upload.wikimedia.org/wikipedia/commons/a/af/Planet_Comics_69.jpg",
+  planetNo1HiRes: "https://upload.wikimedia.org/wikipedia/commons/5/55/Planet_Comics_no._1_%28high-res%29.jpg",
+  planetNo2Cover: "https://upload.wikimedia.org/wikipedia/commons/4/43/Planet_Comics_no._2_%28cover%29.jpg"
+} as const;
+
 const SCENE_TEMPLATES: Array<{
   id: string;
   label: string;
   title: string;
   body: string;
   sketchPrompt: string;
+  imageUrl: string;
+  panelImageUrls: string[];
   transitionStyle: TransitionStyle;
 }> = [
   {
-    id: "intro",
-    label: "Вступление",
-    title: "Новая сцена",
-    body:
-      "Герой входит в новую локацию и замечает деталь, которая меняет ход событий.\n---\nНа фоне слышен шум города, а на стене появляется символ организации.\n---\nРешение в конце сцены открывает следующую ветку сюжета.",
-    sketchPrompt: "noir intro scene, city fog, monochrome comic sketch",
-    transitionStyle: "FADE"
+    id: "hero-intro",
+    label: "Выход героя",
+    title: "Тревога над Неон-Сити",
+    body: `Над городом разрывается сирена, и на стеклянной башне вспыхивает знак бедствия Лиги.
+---
+Герой приземляется на крышу монорельса, замечая внизу панику и тени дронов.
+---
+На визоре появляется выбор маршрута: к реактору, в метро или к захваченному мосту.`,
+    sketchPrompt:
+      "silver age superhero comic panel, skyline at night, dramatic spotlight, halftone dots, rich cinematic coloring, premium inks",
+    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planetNo1HiRes,
+    panelImageUrls: [
+      UNIVERSAL_COMIC_WEB_IMAGES.planetNo1HiRes,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet03,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet12
+    ],
+    transitionStyle: "PAGE_FLIP"
   },
   {
-    id: "investigation",
+    id: "hero-investigation",
     label: "Расследование",
-    title: "Сбор улик",
-    body:
-      "Герой изучает улики и находит связку фактов, которые раньше казались случайными.\n---\nВ архиве всплывает имя ключевого свидетеля и его последний маршрут.\n---\nТеперь можно выбрать: продолжить слежку или проверить скрытую локацию.",
-    sketchPrompt: "detective investigation board, documents, noir crosshatching",
-    transitionStyle: "ZOOM"
+    title: "Улики в технопарке",
+    body: `В лаборатории находишь вскрытый сейф и схему устройства, способного отключить электросеть города.
+---
+На стене проецируется маршрут грузовиков корпорации Black Volt и имена подкупленных чиновников.
+---
+Партнёр по связи предупреждает: кто-то уже стирает следы на центральном сервере.`,
+    sketchPrompt:
+      "classic comic detective lab, superhero silhouette, evidence board, layered shading, detailed inks, cinematic color grading",
+    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet11,
+    panelImageUrls: [
+      UNIVERSAL_COMIC_WEB_IMAGES.planet11,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet01,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet57
+    ],
+    transitionStyle: "INK_BLEED"
   },
   {
-    id: "dialogue",
-    label: "Диалог",
-    title: "Напряжённый разговор",
-    body:
-      "Собеседник сначала молчит, но затем даёт важную подсказку о следующей цели.\n---\nКаждая реплика открывает новые детали заговора и мотивы участников.\n---\nФинальная фраза задаёт моральный выбор, влияющий на концовку.",
-    sketchPrompt: "close-up dialogue panel, dramatic lighting, black and white",
-    transitionStyle: "SLIDE_LEFT"
+    id: "hero-dialogue",
+    label: "Переговоры",
+    title: "Сделка с информатором",
+    body: `Информатор в маске требует иммунитет в обмен на координаты тайного ангара.
+---
+Его руки дрожат: за ним следят наёмники, и времени осталось считанные минуты.
+---
+Финальная фраза меняет тон: 'Либо ты спасаешь район, либо гонишься за главарём'.`,
+    sketchPrompt:
+      "vintage superhero noir dialogue, rain, close-up faces, speech bubbles, dramatic color contrast, polished comic finish",
+    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet57,
+    panelImageUrls: [
+      UNIVERSAL_COMIC_WEB_IMAGES.planet57,
+      UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet03
+    ],
+    transitionStyle: "VERTICAL_REVEAL"
   },
   {
-    id: "action",
+    id: "hero-action",
     label: "Экшен",
-    title: "Погоня",
-    body:
-      "Сцена начинается резким рывком: герой преследует цель через тесные коридоры.\n---\nПрепятствия заставляют выбирать быстрый и рискованный маршрут.\n---\nВ конце появляется шанс перехватить противника или спасти союзника.",
-    sketchPrompt: "dynamic chase sequence, motion lines, noir action panels",
-    transitionStyle: "SLIDE_RIGHT"
+    title: "Бой на магнитном мосту",
+    body: `По мосту летят искры: герой отбивает очередь энергетических копий и прыгает между вагонами.
+---
+Антагонист запускает импульс, и весь транспорт застывает над рекой.
+---
+Остаётся три секунды, чтобы сорвать генератор или эвакуировать пассажиров.`,
+    sketchPrompt:
+      "dynamic superhero action comic, speed lines, bridge battle, high contrast lighting, vibrant inks, premium print look",
+    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+    panelImageUrls: [
+      UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet05,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet12
+    ],
+    transitionStyle: "WHIP_PAN"
   },
   {
-    id: "finale",
+    id: "hero-finale",
     label: "Финал",
-    title: "Кульминация",
-    body:
-      "Противники сталкиваются в ключевой точке, и раскрывается главный секрет истории.\n---\nПоследствия выбора становятся очевидными для всех персонажей.\n---\nЭта сцена завершает ветку и оставляет эмоциональный акцент для эпилога.",
-    sketchPrompt: "epic noir finale, rooftop confrontation, monochrome contrast",
-    transitionStyle: "FADE"
+    title: "Шторм над реактором",
+    body: `В ядре башни запускается протокол 'Чёрная ночь' — город может остаться без света и связи.
+---
+Союзники держат оборону, пока ты прорываешься к пульту перезапуска.
+---
+Последний выбор: публично раскрыть заговор или скрыть правду ради предотвращения паники.`,
+    sketchPrompt:
+      "epic superhero comic finale, reactor chamber, lightning, dramatic inks, cinematic palette, ultra-detailed comic art",
+    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planetNo2Cover,
+    panelImageUrls: [
+      UNIVERSAL_COMIC_WEB_IMAGES.planetNo2Cover,
+      UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+      UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01
+    ],
+    transitionStyle: "PARALLAX_SWEEP"
   }
 ];
+
 const ILLUSTRATION_PRESETS = [
   {
-    label: "Vintage Crime",
-    description: "Старая детективная обложка с крупным заголовком и фактурной печатью",
-    url: "/uploads/seed/vintage-detective-cover.svg",
-    promptSeed:
-      "1950s crime comic cover, detective in trench coat, night city alley, halftone dots, aged paper texture, off-register print, bold ink lines, monochrome with warm paper tone"
+    label: "Planet Comics #1",
+    description: "Космический pulp-фон с ретро-комиксной композицией",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet01,
+    promptSeed: "retro comic sci-fi cityscape, dramatic location background, vintage print texture"
   },
   {
-    label: "Vintage Horror",
-    description: "Пульп-ужасы с контрастными тенями и газетной текстурой",
-    url: "/uploads/seed/vintage-horror-cover.svg",
-    promptSeed:
-      "retro horror comic cover, looming silhouettes, dramatic shadows, vintage halftone screen, weathered paper, thick black inks, old print imperfections, monochrome"
+    label: "Planet Comics #3",
+    description: "Универсальная приключенческая сцена с глубокой перспективой",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet03,
+    promptSeed: "adventure comic background, dynamic perspective, halftone texture, location-focused art"
   },
   {
-    label: "Vintage Adventure",
-    description: "Приключенческая обложка с энергичной композицией и крупным слоганом",
-    url: "/uploads/seed/vintage-adventure-cover.svg",
-    promptSeed:
-      "1960s adventure comic cover, dynamic composition, river docks at night, heroic silhouette, motion lines, halftone texture, aged pulp paper, monochrome ink illustration"
+    label: "Planet Comics #5",
+    description: "Фон для экшен-сцен с яркими винтажными тонами",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet05,
+    promptSeed: "vintage action comic environment, energetic color palette, rich inks"
   },
   {
-    label: "Vintage Serial",
-    description: "Серийный «дело недели» формат в духе старых печатных выпусков",
-    url: "/uploads/seed/vintage-serial-cover.svg",
-    promptSeed:
-      "old serial detective comic cover, case file typography, split-panel composition, halftone dots, rough ink outlines, yellowed paper, antique monochrome print style"
+    label: "Planet Comics #11",
+    description: "Футуристическая локация для научно-фантастических эпизодов",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet11,
+    promptSeed: "classic sci-fi comic location, industrial skyline, clean panel readability"
   },
   {
-    label: "Noir Chase Panel",
-    description: "Динамичный кадр погони в узких улицах",
-    url: "/uploads/seed/page-03.svg",
-    promptSeed:
-      "old comic interior panel, night chase in narrow streets, speed lines, dramatic perspective, heavy inking, halftone shadows, monochrome"
+    label: "Planet Comics #12",
+    description: "Универсальная обложечная сцена для переходов и развилок",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet12,
+    promptSeed: "retro comic location shot, cinematic framing, print-era halftone styling"
   },
   {
-    label: "Archive Investigation Panel",
-    description: "Кадр расследования с уликами и архивными картотеками",
-    url: "/uploads/seed/page-04.svg",
-    promptSeed:
-      "retro detective comic panel, archive room with clue board and documents, low-key lighting, crosshatching, halftone texture, monochrome print look"
+    label: "Planet Comics #57",
+    description: "Темная локация для тревожных или ночных сцен",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet57,
+    promptSeed: "dark comic backdrop, noir lighting, bold ink contours, environment-focused scene"
+  },
+  {
+    label: "Planet Comics #69",
+    description: "Контрастный фон для кульминаций и крупных событий",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+    promptSeed: "high-contrast vintage comic scene, dramatic sky, epic location composition"
+  },
+  {
+    label: "Blue Beetle #1",
+    description: "Классическая универсальная ретро-комиксная стилистика",
+    url: UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01,
+    promptSeed: "golden age comic style background, bold vintage inks, location-ready composition"
   }
 ];
 
@@ -137,12 +222,120 @@ type EditorPage = ComicWritePage & {
   pendingImageFile: File | null;
 };
 
+type DebouncedInputProps = {
+  label: string;
+  value: string;
+  onCommit: (nextValue: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  description?: string;
+  delay?: number;
+};
+
+function DebouncedTextInput({ label, value, onCommit, placeholder, required, description, delay = 220 }: DebouncedInputProps) {
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (draft !== value) {
+        onCommit(draft);
+      }
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [draft, value, onCommit, delay]);
+
+  return (
+    <TextInput
+      label={label}
+      value={draft}
+      onChange={(event) => setDraft(event.currentTarget.value)}
+      onBlur={() => {
+        if (draft !== value) {
+          onCommit(draft);
+        }
+      }}
+      placeholder={placeholder}
+      required={required}
+      description={description}
+    />
+  );
+}
+
+function DebouncedTextarea({
+  label,
+  value,
+  onCommit,
+  placeholder,
+  required,
+  description,
+  delay = 220,
+  minRows = 3,
+  maxRows
+}: DebouncedInputProps & { minRows?: number; maxRows?: number }) {
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (draft !== value) {
+        onCommit(draft);
+      }
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [draft, value, onCommit, delay]);
+
+  return (
+    <Textarea
+      label={label}
+      value={draft}
+      onChange={(event) => setDraft(event.currentTarget.value)}
+      onBlur={() => {
+        if (draft !== value) {
+          onCommit(draft);
+        }
+      }}
+      autosize
+      minRows={minRows}
+      maxRows={maxRows}
+      placeholder={placeholder}
+      required={required}
+      description={description}
+    />
+  );
+}
+
+function parseDialogPanels(body: string) {
+  return body
+    .split(/\n\s*---\s*\n/g)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function ensurePanelImageArrayLength(images: string[] | undefined, expectedLength: number) {
+  const base = Array.isArray(images) ? images.slice(0, expectedLength) : [];
+  while (base.length < expectedLength) {
+    base.push("");
+  }
+  return base;
+}
+
 function makeEmptyPage(position: number): EditorPage {
   return {
     pageKey: `page_${position}`,
     title: `Сцена ${position}`,
     body: "",
     imageUrl: "",
+    panelImageUrls: [""],
     sketchPrompt: "",
     transitionStyle: "SLIDE_LEFT",
     position,
@@ -166,12 +359,14 @@ function buildPagesFromScript(script: string): EditorPage[] {
   return blocks.map((block, index) => {
     const position = index + 1;
     const firstSentence = block.split(".")[0].slice(0, 60);
+    const panelCount = Math.max(parseDialogPanels(block).length, 1);
 
     return {
       pageKey: `scene_${position}`,
       title: firstSentence || `Сцена ${position}`,
       body: block,
       imageUrl: "",
+      panelImageUrls: Array.from({ length: panelCount }, () => ""),
       sketchPrompt: "",
       transitionStyle: TRANSITIONS[index % TRANSITIONS.length],
       position,
@@ -195,21 +390,25 @@ function fromComicDetail(comic: ComicDetail): { status: ComicStatus; pages: Edit
 
   return {
     status: comic.status,
-    pages: comic.pages.map((page) => ({
-      pageKey: page.pageKey,
-      title: page.title,
-      body: page.body,
-      imageUrl: page.imageUrl ?? "",
-      sketchPrompt: page.sketchPrompt ?? "",
-      transitionStyle: page.transitionStyle,
-      position: page.position,
-      isStart: page.isStart,
-      choices: page.choices.map((choice) => ({
-        label: choice.label,
-        targetPageKey: pageKeyById.get(choice.targetPageId) ?? ""
-      })),
-      pendingImageFile: null
-    }))
+    pages: comic.pages.map((page) => {
+      const panelCount = Math.max(parseDialogPanels(page.body).length, 1);
+      return {
+        pageKey: page.pageKey,
+        title: page.title,
+        body: page.body,
+        imageUrl: page.imageUrl ?? "",
+        panelImageUrls: ensurePanelImageArrayLength(page.panelImageUrls, panelCount),
+        sketchPrompt: page.sketchPrompt ?? "",
+        transitionStyle: page.transitionStyle,
+        position: page.position,
+        isStart: page.isStart,
+        choices: page.choices.map((choice) => ({
+          label: choice.label,
+          targetPageKey: pageKeyById.get(choice.targetPageId) ?? ""
+        })),
+        pendingImageFile: null
+      };
+    })
   };
 }
 
@@ -234,6 +433,12 @@ export function ComicEditorPage() {
   const [pages, setPages] = useState<EditorPage[]>([makeEmptyPage(1)]);
   const [hydrated, setHydrated] = useState(false);
   const [generatingPageIndex, setGeneratingPageIndex] = useState<number | null>(null);
+  const [generatingPanelKey, setGeneratingPanelKey] = useState<string | null>(null);
+  const [panelUploadFiles, setPanelUploadFiles] = useState<Record<string, File | null>>({});
+
+  const setPageField = (pageIndex: number, updater: (page: EditorPage) => EditorPage) => {
+    setPages((current) => current.map((page, index) => (index === pageIndex ? updater(page) : page)));
+  };
 
   useEffect(() => {
     if (!comicQuery.data || hydrated) {
@@ -265,6 +470,7 @@ export function ComicEditorPage() {
             ...cleanPage,
             position: index + 1,
             imageUrl: cleanPage.imageUrl?.trim() || undefined,
+            panelImageUrls: (cleanPage.panelImageUrls ?? []).map((item) => item.trim()).filter(Boolean),
             sketchPrompt: cleanPage.sketchPrompt?.trim() || undefined,
             choices: cleanPage.choices.filter((choice) => choice.label.trim() && choice.targetPageKey.trim())
           };
@@ -302,6 +508,7 @@ export function ComicEditorPage() {
       });
     }
   });
+
   const generateImageMutation = useMutation({
     mutationFn: (prompt: string) => generateComicImage(prompt),
     onError: (error: any) => {
@@ -373,10 +580,28 @@ export function ComicEditorPage() {
     }
 
     const uploaded = await uploadImageMutation.mutateAsync(selectedFile);
-    setPages((current) =>
-      current.map((item, index) => (index === pageIndex ? { ...item, imageUrl: uploaded.url, pendingImageFile: null } : item))
-    );
+    setPageField(pageIndex, (page) => ({ ...page, imageUrl: uploaded.url, pendingImageFile: null }));
     notifications.show({ title: "Загружено", message: "Кадр страницы сохранён", color: "dark" });
+  };
+
+  const uploadDialogImage = async (pageIndex: number, panelIndex: number) => {
+    const key = `${pageIndex}-${panelIndex}`;
+    const selectedFile = panelUploadFiles[key];
+
+    if (!selectedFile) {
+      notifications.show({ title: "Файл не выбран", message: "Выберите изображение панели", color: "yellow" });
+      return;
+    }
+
+    const uploaded = await uploadImageMutation.mutateAsync(selectedFile);
+    setPageField(pageIndex, (page) => {
+      const panelTexts = parseDialogPanels(page.body);
+      const nextUrls = ensurePanelImageArrayLength(page.panelImageUrls, Math.max(panelTexts.length, 1));
+      nextUrls[panelIndex] = uploaded.url;
+      return { ...page, panelImageUrls: nextUrls };
+    });
+    setPanelUploadFiles((current) => ({ ...current, [key]: null }));
+    notifications.show({ title: "Загружено", message: "Иллюстрация диалога сохранена", color: "dark" });
   };
 
   const applySceneTemplate = (pageIndex: number, templateId: string) => {
@@ -385,35 +610,46 @@ export function ComicEditorPage() {
       return;
     }
 
-    setPages((current) =>
-      current.map((item, index) =>
-        index === pageIndex
-          ? {
-              ...item,
-              title: template.title,
-              body: template.body,
-              sketchPrompt: template.sketchPrompt,
-              transitionStyle: template.transitionStyle
-            }
-          : item
-      )
-    );
+    setPageField(pageIndex, (page) => {
+      const panelCount = Math.max(parseDialogPanels(template.body).length, 1);
+      const panelUrls = ensurePanelImageArrayLength(template.panelImageUrls, panelCount);
+      return {
+        ...page,
+        title: template.title,
+        body: template.body,
+        imageUrl: template.imageUrl,
+        sketchPrompt: template.sketchPrompt,
+        transitionStyle: template.transitionStyle,
+        panelImageUrls: panelUrls
+      };
+    });
   };
 
   const applyIllustrationTemplate = (pageIndex: number, imageUrl: string) => {
-    setPages((current) =>
-      current.map((item, index) => (index === pageIndex ? { ...item, imageUrl, pendingImageFile: null } : item))
-    );
+    setPageField(pageIndex, (page) => ({ ...page, imageUrl, pendingImageFile: null }));
+  };
+
+  const applyDialogTemplate = (pageIndex: number, panelIndex: number, imageUrl: string) => {
+    setPageField(pageIndex, (page) => {
+      const panelTexts = parseDialogPanels(page.body);
+      const nextUrls = ensurePanelImageArrayLength(page.panelImageUrls, Math.max(panelTexts.length, 1));
+      nextUrls[panelIndex] = imageUrl;
+      return { ...page, panelImageUrls: nextUrls };
+    });
   };
 
   const buildPromptFromPage = (page: EditorPage) => {
     const pageTitle = page.title.trim() || "comic scene";
-    const firstBeat = page.body
-      .split(/\n\s*---\s*\n/g)
-      .map((part) => part.trim())
-      .filter(Boolean)[0] ?? "dramatic story moment";
+    const firstBeat =
+      parseDialogPanels(page.body)[0] ??
+      "dramatic superhero moment";
 
-    return `black and white comic illustration, ${pageTitle.toLowerCase()}, ${firstBeat.toLowerCase()}, high contrast ink, cinematic composition, expressive linework`;
+    return `premium superhero comic illustration, ${pageTitle.toLowerCase()}, ${firstBeat.toLowerCase()}, cinematic composition, polished inking, dramatic lighting, rich colors, detailed background`;
+  };
+
+  const buildPromptFromPanel = (page: EditorPage, panelText: string, panelIndex: number) => {
+    const sceneTitle = page.title.trim() || "hero scene";
+    return `premium superhero comic panel, scene ${panelIndex + 1}, ${sceneTitle.toLowerCase()}, ${panelText.toLowerCase()}, dramatic framing, cinematic perspective, rich colors, detailed line art, professional print shading`;
   };
 
   const generatePageImage = async (pageIndex: number) => {
@@ -426,18 +662,37 @@ export function ComicEditorPage() {
     setGeneratingPageIndex(pageIndex);
     try {
       const generated = await generateImageMutation.mutateAsync(prompt);
-      setPages((current) =>
-        current.map((item, index) =>
-          index === pageIndex ? { ...item, imageUrl: generated.url, pendingImageFile: null, sketchPrompt: prompt } : item
-        )
-      );
+      setPageField(pageIndex, (item) => ({ ...item, imageUrl: generated.url, pendingImageFile: null, sketchPrompt: prompt }));
       notifications.show({
         title: "Кадр создан",
-        message: "Иллюстрация сгенерирована по prompt и подставлена в страницу",
+        message: "Иллюстрация сгенерирована и подставлена в сцену",
         color: "dark"
       });
     } finally {
       setGeneratingPageIndex(null);
+    }
+  };
+
+  const generateDialogImage = async (pageIndex: number, panelIndex: number, panelText: string) => {
+    const page = pages[pageIndex];
+    if (!page) {
+      return;
+    }
+
+    const prompt = buildPromptFromPanel(page, panelText, panelIndex);
+    const key = `${pageIndex}-${panelIndex}`;
+    setGeneratingPanelKey(key);
+    try {
+      const generated = await generateImageMutation.mutateAsync(prompt);
+      setPageField(pageIndex, (currentPage) => {
+        const panelTexts = parseDialogPanels(currentPage.body);
+        const nextUrls = ensurePanelImageArrayLength(currentPage.panelImageUrls, Math.max(panelTexts.length, 1));
+        nextUrls[panelIndex] = generated.url;
+        return { ...currentPage, panelImageUrls: nextUrls };
+      });
+      notifications.show({ title: "Панель готова", message: "Иллюстрация диалога сгенерирована", color: "dark" });
+    } finally {
+      setGeneratingPanelKey(null);
     }
   };
 
@@ -471,13 +726,12 @@ export function ComicEditorPage() {
         <Grid>
           <Grid.Col span={{ base: 12, md: 7 }}>
             <Stack>
-              <TextInput label="Название" value={title} onChange={(event) => setTitle(event.currentTarget.value)} required />
-              <Textarea
+              <DebouncedTextInput label="Название" value={title} onCommit={setTitle} required />
+              <DebouncedTextarea
                 label="Краткое описание"
-                autosize
-                minRows={3}
                 value={summary}
-                onChange={(event) => setSummary(event.currentTarget.value)}
+                onCommit={setSummary}
+                minRows={3}
                 required
               />
 
@@ -493,7 +747,7 @@ export function ComicEditorPage() {
                     h={200}
                     fit="cover"
                     fallbackSrc="/comic-placeholder.svg"
-                    style={{ filter: "grayscale(100%)" }}
+                    style={{ filter: "contrast(1.06) saturate(1.04)" }}
                   />
                 )}
                 <FileInput
@@ -554,12 +808,13 @@ export function ComicEditorPage() {
               Генерировать страницы из сценария
             </Button>
           </Group>
-          <Textarea
+          <DebouncedTextarea
+            label=""
             value={script}
-            onChange={(event) => setScript(event.currentTarget.value)}
-            autosize
+            onCommit={setScript}
             minRows={6}
             maxRows={14}
+            delay={260}
             placeholder="Опишите сцены, разделяя их пустой строкой. Для панелей внутри одной страницы используйте разделитель ---"
           />
         </Stack>
@@ -580,386 +835,443 @@ export function ComicEditorPage() {
           </Button>
         </Group>
 
-        {pages.map((page, pageIndex) => (
-          <Card key={`${page.pageKey}-${pageIndex}`} className="ink-grid" p="md">
-            <Stack>
-              <Group justify="space-between">
-                <Group>
-                  <Badge color="dark">Страница {pageIndex + 1}</Badge>
-                  {page.isStart && <Badge variant="outline">Стартовая</Badge>}
-                </Group>
-                <Group>
-                  <Button
-                    variant={page.isStart ? "filled" : "light"}
-                    color="dark"
-                    size="xs"
-                    onClick={() =>
-                      setPages((current) =>
-                        current.map((item, index) => ({
-                          ...item,
-                          isStart: index === pageIndex
-                        }))
-                      )
-                    }
-                  >
-                    Сделать стартовой
-                  </Button>
-                  <ActionIcon
-                    color="red"
-                    variant="light"
-                    onClick={() => {
-                      if (pages.length === 1) {
-                        return;
-                      }
+        {pages.map((page, pageIndex) => {
+          const dialogPanels = parseDialogPanels(page.body);
+          const panelCount = Math.max(dialogPanels.length, 1);
+          const normalizedPanelImages = ensurePanelImageArrayLength(page.panelImageUrls, panelCount);
 
-                      setPages((current) => {
-                        const removed = current[pageIndex];
-                        const next = current
-                          .filter((_, index) => index !== pageIndex)
-                          .map((item, index) => ({
-                            ...item,
-                            position: index + 1,
-                            isStart: item.isStart && item.pageKey !== removed.pageKey,
-                            choices: item.choices.filter((choice) => choice.targetPageKey !== removed.pageKey)
-                          }));
-
-                        if (!next.some((item) => item.isStart) && next[0]) {
-                          next[0].isStart = true;
-                        }
-
-                        return next;
-                      });
-                    }}
-                    aria-label="Удалить страницу"
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              </Group>
-
-              <Grid>
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <TextInput
-                    label="Ключ страницы"
-                    value={page.pageKey}
-                    onChange={(event) =>
-                      setPages((current) =>
-                        current.map((item, index) =>
-                          index === pageIndex ? { ...item, pageKey: event.currentTarget.value } : item
-                        )
-                      )
-                    }
-                  />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Select
-                    label="Переход"
-                    value={page.transitionStyle}
-                    data={TRANSITIONS.map((transition) => ({ label: transition, value: transition }))}
-                    onChange={(value) =>
-                      setPages((current) =>
-                        current.map((item, index) =>
-                          index === pageIndex
-                            ? {
-                                ...item,
-                                transitionStyle: (value as TransitionStyle) || "SLIDE_LEFT"
-                              }
-                            : item
-                        )
-                      )
-                    }
-                  />
-                </Grid.Col>
-              </Grid>
-
-              <Stack gap={6}>
-                <Text size="xs" c="dimmed">
-                  Шаблоны сцены
-                </Text>
-                <Group gap="xs" wrap="wrap">
-                  {SCENE_TEMPLATES.map((template) => (
+          return (
+            <Card key={`${page.pageKey}-${pageIndex}`} className="ink-grid" p="md">
+              <Stack>
+                <Group justify="space-between">
+                  <Group>
+                    <Badge color="dark">Страница {pageIndex + 1}</Badge>
+                    {page.isStart && <Badge variant="outline">Стартовая</Badge>}
+                  </Group>
+                  <Group>
                     <Button
-                      key={template.id}
-                      size="xs"
-                      variant="outline"
+                      variant={page.isStart ? "filled" : "light"}
                       color="dark"
-                      onClick={() => applySceneTemplate(pageIndex, template.id)}
-                    >
-                      {template.label}
-                    </Button>
-                  ))}
-                </Group>
-              </Stack>
-
-              <TextInput
-                label="Заголовок"
-                value={page.title}
-                onChange={(event) =>
-                  setPages((current) =>
-                    current.map((item, index) =>
-                      index === pageIndex ? { ...item, title: event.currentTarget.value } : item
-                    )
-                  )
-                }
-              />
-
-              <Textarea
-                label="Текст страницы"
-                autosize
-                minRows={3}
-                value={page.body}
-                onChange={(event) =>
-                  setPages((current) =>
-                    current.map((item, index) =>
-                      index === pageIndex ? { ...item, body: event.currentTarget.value } : item
-                    )
-                  )
-                }
-              />
-
-              <Grid>
-                <Grid.Col span={{ base: 12, md: 7 }}>
-                  <Stack gap="xs">
-                    {page.imageUrl && (
-                      <Image
-                        src={resolveAssetUrl(page.imageUrl) || "/comic-placeholder.svg"}
-                        alt={page.title}
-                        h={170}
-                        fit="cover"
-                        radius="sm"
-                        fallbackSrc="/comic-placeholder.svg"
-                        style={{ filter: "grayscale(100%)" }}
-                      />
-                    )}
-                    <FileInput
-                      clearable
-                      value={page.pendingImageFile}
-                      onChange={(value) =>
-                        setPages((current) =>
-                          current.map((item, index) =>
-                            index === pageIndex ? { ...item, pendingImageFile: value } : item
-                          )
-                        )
-                      }
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      placeholder="Выберите картинку для страницы"
-                    />
-                    <Stack gap={6}>
-                      <Text size="xs" c="dimmed">
-                        Шаблоны иллюстраций
-                      </Text>
-                      <Grid>
-                        {ILLUSTRATION_PRESETS.map((preset) => (
-                          <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.url}>
-                            <Card withBorder p={6}>
-                              <Stack gap={6}>
-                                <Image
-                                  src={resolveAssetUrl(preset.url) || "/comic-placeholder.svg"}
-                                  alt={preset.label}
-                                  h={82}
-                                  fit="cover"
-                                  radius="sm"
-                                  fallbackSrc="/comic-placeholder.svg"
-                                  style={{ filter: "grayscale(100%)" }}
-                                />
-                                <Text size="xs" fw={700}>
-                                  {preset.label}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {preset.description}
-                                </Text>
-                                <Group gap={6}>
-                                  <Button
-                                    size="xs"
-                                    color="dark"
-                                    variant={page.imageUrl === preset.url ? "filled" : "outline"}
-                                    onClick={() => applyIllustrationTemplate(pageIndex, preset.url)}
-                                  >
-                                    Применить
-                                  </Button>
-                                  <Button
-                                    size="xs"
-                                    variant="subtle"
-                                    color="dark"
-                                    onClick={() =>
-                                      setPages((current) =>
-                                        current.map((item, index) =>
-                                          index === pageIndex ? { ...item, sketchPrompt: preset.promptSeed } : item
-                                        )
-                                      )
-                                    }
-                                  >
-                                    Prompt
-                                  </Button>
-                                </Group>
-                              </Stack>
-                            </Card>
-                          </Grid.Col>
-                        ))}
-                      </Grid>
-                    </Stack>
-                    <Group>
-                      <Button
-                        variant="outline"
-                        color="dark"
-                        leftSection={<IconCloudUpload size={16} />}
-                        onClick={() => uploadPageImage(pageIndex)}
-                        loading={uploadImageMutation.isPending}
-                      >
-                        Загрузить кадр
-                      </Button>
-                      {page.imageUrl && (
-                        <Text size="xs" c="dimmed">
-                          Сохранено: {page.imageUrl}
-                        </Text>
-                      )}
-                    </Group>
-                  </Stack>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 5 }}>
-                  <TextInput
-                    label="Prompt для генерации иллюстрации (текстовое описание кадра)"
-                    value={page.sketchPrompt}
-                    onChange={(event) =>
-                      setPages((current) =>
-                        current.map((item, index) =>
-                          index === pageIndex ? { ...item, sketchPrompt: event.currentTarget.value } : item
-                        )
-                      )
-                    }
-                  />
-                  <Text size="xs" c="dimmed" mt={6}>
-                    Prompt управляет AI-генерацией: чем конкретнее сцена, ракурс и стиль, тем лучше результат.
-                  </Text>
-                  <Group mt={8}>
-                    <Button
                       size="xs"
-                      variant="light"
-                      color="dark"
                       onClick={() =>
                         setPages((current) =>
-                          current.map((item, index) =>
-                            index === pageIndex ? { ...item, sketchPrompt: buildPromptFromPage(item) } : item
-                          )
+                          current.map((item, index) => ({
+                            ...item,
+                            isStart: index === pageIndex
+                          }))
                         )
                       }
                     >
-                      Автопромпт из сцены
+                      Сделать стартовой
                     </Button>
-                    <Button
-                      size="xs"
-                      color="dark"
-                      leftSection={<IconSparkles size={14} />}
-                      loading={generateImageMutation.isPending && generatingPageIndex === pageIndex}
-                      onClick={() => generatePageImage(pageIndex)}
-                    >
-                      Сгенерировать кадр
-                    </Button>
-                  </Group>
-                </Grid.Col>
-              </Grid>
+                    <ActionIcon
+                      color="red"
+                      variant="light"
+                      onClick={() => {
+                        if (pages.length === 1) {
+                          return;
+                        }
 
-              <Divider />
-              <Group justify="space-between">
-                <Text fw={700}>Выборы на этой странице</Text>
-                <Button
-                  variant="subtle"
-                  color="dark"
-                  leftSection={<IconArrowNarrowDown size={16} />}
-                  onClick={() =>
-                    setPages((current) =>
-                      current.map((item, index) =>
-                        index === pageIndex
-                          ? {
+                        setPages((current) => {
+                          const removed = current[pageIndex];
+                          const next = current
+                            .filter((_, index) => index !== pageIndex)
+                            .map((item, index) => ({
                               ...item,
-                              choices: [...item.choices, { label: "Новый выбор", targetPageKey: "" }]
-                            }
-                          : item
-                      )
-                    )
-                  }
-                >
-                  Добавить выбор
-                </Button>
-              </Group>
+                              position: index + 1,
+                              isStart: item.isStart && item.pageKey !== removed.pageKey,
+                              choices: item.choices.filter((choice) => choice.targetPageKey !== removed.pageKey)
+                            }));
 
-              <Stack gap="xs">
-                {page.choices.map((choice, choiceIndex) => (
-                  <Box key={`${choiceIndex}-${page.pageKey}`}>
-                    <Grid align="end">
-                      <Grid.Col span={{ base: 12, md: 5 }}>
-                        <TextInput
-                          label={`Текст выбора ${choiceIndex + 1}`}
-                          value={choice.label}
-                          onChange={(event) =>
-                            setPages((current) =>
-                              current.map((item, index) =>
-                                index === pageIndex
-                                  ? {
-                                      ...item,
-                                      choices: item.choices.map((itemChoice, indexChoice) =>
-                                        indexChoice === choiceIndex
-                                          ? { ...itemChoice, label: event.currentTarget.value }
-                                          : itemChoice
-                                      )
-                                    }
-                                  : item
-                              )
-                            )
+                          if (!next.some((item) => item.isStart) && next[0]) {
+                            next[0].isStart = true;
                           }
+
+                          return next;
+                        });
+                      }}
+                      aria-label="Удалить страницу"
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Group>
+
+                <Grid>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <DebouncedTextInput
+                      label="Ключ страницы"
+                      value={page.pageKey}
+                      onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, pageKey: nextValue }))}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Select
+                      label="Переход"
+                      value={page.transitionStyle}
+                      data={TRANSITIONS.map((transition) => ({ label: transition, value: transition }))}
+                      onChange={(value) =>
+                        setPageField(pageIndex, (item) => ({
+                          ...item,
+                          transitionStyle: (value as TransitionStyle) || "SLIDE_LEFT"
+                        }))
+                      }
+                    />
+                  </Grid.Col>
+                </Grid>
+
+                <Stack gap={6}>
+                  <Text size="xs" c="dimmed">
+                    Шаблоны сцены
+                  </Text>
+                  <Group gap="xs" wrap="wrap">
+                    {SCENE_TEMPLATES.map((template) => (
+                      <Button
+                        key={template.id}
+                        size="xs"
+                        variant="outline"
+                        color="dark"
+                        onClick={() => applySceneTemplate(pageIndex, template.id)}
+                      >
+                        {template.label}
+                      </Button>
+                    ))}
+                  </Group>
+                </Stack>
+
+                <DebouncedTextInput
+                  label="Заголовок"
+                  value={page.title}
+                  onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, title: nextValue }))}
+                />
+
+                <DebouncedTextarea
+                  label="Текст страницы"
+                  value={page.body}
+                  minRows={4}
+                  onCommit={(nextValue) =>
+                    setPageField(pageIndex, (item) => {
+                      const panelCountFromBody = Math.max(parseDialogPanels(nextValue).length, 1);
+                      return {
+                        ...item,
+                        body: nextValue,
+                        panelImageUrls: ensurePanelImageArrayLength(item.panelImageUrls, panelCountFromBody)
+                      };
+                    })
+                  }
+                />
+
+                <Grid>
+                  <Grid.Col span={{ base: 12, md: 7 }}>
+                    <Stack gap="xs">
+                      {page.imageUrl && (
+                        <Image
+                          src={resolveAssetUrl(page.imageUrl) || "/comic-placeholder.svg"}
+                          alt={page.title}
+                          h={170}
+                          fit="cover"
+                          radius="sm"
+                          fallbackSrc="/comic-placeholder.svg"
+                          style={{ filter: "contrast(1.06) saturate(1.04)" }}
                         />
-                      </Grid.Col>
-                      <Grid.Col span={{ base: 12, md: 5 }}>
-                        <Select
-                          label="Переход к странице"
-                          value={choice.targetPageKey}
-                          data={pageKeyOptions}
-                          onChange={(value) =>
-                            setPages((current) =>
-                              current.map((item, index) =>
-                                index === pageIndex
-                                  ? {
-                                      ...item,
-                                      choices: item.choices.map((itemChoice, indexChoice) =>
-                                        indexChoice === choiceIndex
-                                          ? { ...itemChoice, targetPageKey: value ?? "" }
-                                          : itemChoice
-                                      )
-                                    }
-                                  : item
-                              )
-                            )
-                          }
-                        />
-                      </Grid.Col>
-                      <Grid.Col span={{ base: 12, md: 2 }}>
+                      )}
+                      <FileInput
+                        clearable
+                        value={page.pendingImageFile}
+                        onChange={(value) => setPageField(pageIndex, (item) => ({ ...item, pendingImageFile: value }))}
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        placeholder="Выберите картинку для всей сцены (fallback)"
+                      />
+
+                      <Stack gap={6}>
+                        <Text size="xs" c="dimmed">
+                          Универсальные комиксные шаблоны
+                        </Text>
+                        <Grid>
+                          {ILLUSTRATION_PRESETS.map((preset) => (
+                            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.url}>
+                              <Card withBorder p={6}>
+                                <Stack gap={6}>
+                                  <Image
+                                    src={resolveAssetUrl(preset.url) || "/comic-placeholder.svg"}
+                                    alt={preset.label}
+                                    h={82}
+                                    fit="cover"
+                                    radius="sm"
+                                    fallbackSrc="/comic-placeholder.svg"
+                                    style={{ filter: "contrast(1.06) saturate(1.04)" }}
+                                  />
+                                  <Text size="xs" fw={700}>
+                                    {preset.label}
+                                  </Text>
+                                  <Text size="xs" c="dimmed">
+                                    {preset.description}
+                                  </Text>
+                                  <Group gap={6}>
+                                    <Button
+                                      size="xs"
+                                      color="dark"
+                                      variant={page.imageUrl === preset.url ? "filled" : "outline"}
+                                      onClick={() => applyIllustrationTemplate(pageIndex, preset.url)}
+                                    >
+                                      На сцену
+                                    </Button>
+                                    <Button
+                                      size="xs"
+                                      variant="subtle"
+                                      color="dark"
+                                      onClick={() =>
+                                        setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: preset.promptSeed }))
+                                      }
+                                    >
+                                      Prompt
+                                    </Button>
+                                  </Group>
+                                </Stack>
+                              </Card>
+                            </Grid.Col>
+                          ))}
+                        </Grid>
+                      </Stack>
+
+                      <Group>
                         <Button
-                          variant="light"
-                          color="red"
-                          fullWidth
-                          onClick={() =>
-                            setPages((current) =>
-                              current.map((item, index) =>
-                                index === pageIndex
-                                  ? {
-                                      ...item,
-                                      choices: item.choices.filter((_, idx) => idx !== choiceIndex)
-                                    }
-                                  : item
-                              )
-                            )
-                          }
+                          variant="outline"
+                          color="dark"
+                          leftSection={<IconCloudUpload size={16} />}
+                          onClick={() => uploadPageImage(pageIndex)}
+                          loading={uploadImageMutation.isPending}
                         >
-                          Удалить
+                          Загрузить кадр сцены
                         </Button>
-                      </Grid.Col>
-                    </Grid>
-                  </Box>
-                ))}
+                        {page.imageUrl && (
+                          <Text size="xs" c="dimmed">
+                            Сохранено: {page.imageUrl}
+                          </Text>
+                        )}
+                      </Group>
+                    </Stack>
+                  </Grid.Col>
+
+                  <Grid.Col span={{ base: 12, md: 5 }}>
+                    <DebouncedTextInput
+                      label="Prompt для генерации сцены"
+                      value={page.sketchPrompt ?? ""}
+                      onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: nextValue }))}
+                      description="Чем конкретнее персонаж, ракурс и действие, тем лучше кадр."
+                    />
+                    <Group mt={8}>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="dark"
+                        onClick={() => setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: buildPromptFromPage(item) }))}
+                      >
+                        Автопромпт
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="dark"
+                        leftSection={<IconSparkles size={14} />}
+                        loading={generateImageMutation.isPending && generatingPageIndex === pageIndex}
+                        onClick={() => generatePageImage(pageIndex)}
+                      >
+                        Сгенерировать сцену
+                      </Button>
+                    </Group>
+                  </Grid.Col>
+                </Grid>
+
+                <Divider />
+
+                <Stack gap="sm">
+                  <Group justify="space-between" align="center">
+                    <Text fw={700}>Иллюстрации по диалогам (разделитель ---)</Text>
+                    <Badge variant="light" color="dark">
+                      {panelCount} панелей
+                    </Badge>
+                  </Group>
+
+                  {dialogPanels.length === 0 ? (
+                    <Text size="sm" c="dimmed">
+                      Добавьте текст и разделители --- чтобы редактировать иллюстрации каждой панели.
+                    </Text>
+                  ) : (
+                    dialogPanels.map((panelText, panelIndex) => {
+                      const panelUploadKey = `${pageIndex}-${panelIndex}`;
+                      const panelImageUrl = normalizedPanelImages[panelIndex] || page.imageUrl || "";
+
+                      return (
+                        <Card key={panelUploadKey} withBorder p="sm">
+                          <Stack gap="xs">
+                            <Group justify="space-between" align="start">
+                              <Badge color="dark">Диалог {panelIndex + 1}</Badge>
+                              <Button
+                                size="xs"
+                                variant="subtle"
+                                color="dark"
+                                onClick={() =>
+                                  setPageField(pageIndex, (item) => {
+                                    const nextUrls = [...ensurePanelImageArrayLength(item.panelImageUrls, panelCount)];
+                                    nextUrls[panelIndex] = "";
+                                    return { ...item, panelImageUrls: nextUrls };
+                                  })
+                                }
+                              >
+                                Сбросить
+                              </Button>
+                            </Group>
+                            <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+                              {panelText}
+                            </Text>
+
+                            <Image
+                              src={resolveAssetUrl(panelImageUrl) || "/comic-placeholder.svg"}
+                              alt={`panel-${panelIndex + 1}`}
+                              h={150}
+                              fit="cover"
+                              radius="sm"
+                              fallbackSrc="/comic-placeholder.svg"
+                              style={{ filter: "contrast(1.06) saturate(1.04)" }}
+                            />
+
+                            <DebouncedTextInput
+                              label="URL иллюстрации панели"
+                              value={normalizedPanelImages[panelIndex] ?? ""}
+                              onCommit={(nextValue) =>
+                                setPageField(pageIndex, (item) => {
+                                  const nextUrls = [...ensurePanelImageArrayLength(item.panelImageUrls, panelCount)];
+                                  nextUrls[panelIndex] = nextValue;
+                                  return { ...item, panelImageUrls: nextUrls };
+                                })
+                              }
+                              placeholder="/uploads/comics/..."
+                            />
+
+                            <FileInput
+                              clearable
+                              value={panelUploadFiles[panelUploadKey] ?? null}
+                              onChange={(value) => setPanelUploadFiles((current) => ({ ...current, [panelUploadKey]: value }))}
+                              accept="image/png,image/jpeg,image/webp,image/gif"
+                              placeholder="Загрузить картинку для этого диалога"
+                            />
+
+                            <Group>
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                color="dark"
+                                leftSection={<IconCloudUpload size={14} />}
+                                onClick={() => uploadDialogImage(pageIndex, panelIndex)}
+                                loading={uploadImageMutation.isPending}
+                              >
+                                Загрузить панель
+                              </Button>
+                              <Button
+                                size="xs"
+                                color="dark"
+                                leftSection={<IconSparkles size={14} />}
+                                loading={generateImageMutation.isPending && generatingPanelKey === panelUploadKey}
+                                onClick={() => generateDialogImage(pageIndex, panelIndex, panelText)}
+                              >
+                                Сгенерировать панель
+                              </Button>
+                            </Group>
+
+                            <Group gap={6} wrap="wrap">
+                              {ILLUSTRATION_PRESETS.slice(0, 5).map((preset) => (
+                                <Button
+                                  key={`${panelUploadKey}-${preset.url}`}
+                                  size="xs"
+                                  variant="outline"
+                                  color="dark"
+                                  onClick={() => applyDialogTemplate(pageIndex, panelIndex, preset.url)}
+                                >
+                                  {preset.label}
+                                </Button>
+                              ))}
+                            </Group>
+                          </Stack>
+                        </Card>
+                      );
+                    })
+                  )}
+                </Stack>
+
+                <Divider />
+                <Group justify="space-between">
+                  <Text fw={700}>Выборы на этой странице</Text>
+                  <Button
+                    variant="subtle"
+                    color="dark"
+                    leftSection={<IconArrowNarrowDown size={16} />}
+                    onClick={() =>
+                      setPageField(pageIndex, (item) => ({
+                        ...item,
+                        choices: [...item.choices, { label: "Новый выбор", targetPageKey: "" }]
+                      }))
+                    }
+                  >
+                    Добавить выбор
+                  </Button>
+                </Group>
+
+                <Stack gap="xs">
+                  {page.choices.map((choice, choiceIndex) => (
+                    <Box key={`${choiceIndex}-${page.pageKey}`}>
+                      <Grid align="end">
+                        <Grid.Col span={{ base: 12, md: 5 }}>
+                          <DebouncedTextInput
+                            label={`Текст выбора ${choiceIndex + 1}`}
+                            value={choice.label}
+                            onCommit={(nextValue) =>
+                              setPageField(pageIndex, (item) => ({
+                                ...item,
+                                choices: item.choices.map((itemChoice, indexChoice) =>
+                                  indexChoice === choiceIndex ? { ...itemChoice, label: nextValue } : itemChoice
+                                )
+                              }))
+                            }
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 5 }}>
+                          <Select
+                            label="Переход к странице"
+                            value={choice.targetPageKey}
+                            data={pageKeyOptions}
+                            onChange={(value) =>
+                              setPageField(pageIndex, (item) => ({
+                                ...item,
+                                choices: item.choices.map((itemChoice, indexChoice) =>
+                                  indexChoice === choiceIndex ? { ...itemChoice, targetPageKey: value ?? "" } : itemChoice
+                                )
+                              }))
+                            }
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 2 }}>
+                          <Button
+                            variant="light"
+                            color="red"
+                            fullWidth
+                            onClick={() =>
+                              setPageField(pageIndex, (item) => ({
+                                ...item,
+                                choices: item.choices.filter((_, idx) => idx !== choiceIndex)
+                              }))
+                            }
+                          >
+                            Удалить
+                          </Button>
+                        </Grid.Col>
+                      </Grid>
+                    </Box>
+                  ))}
+                </Stack>
               </Stack>
-            </Stack>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </Stack>
     </Stack>
   );

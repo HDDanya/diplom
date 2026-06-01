@@ -19,28 +19,72 @@ import { resolveAssetUrl } from "../lib/assets";
 import { ComicPage, TransitionStyle } from "../types/api";
 
 function createTransitionVariants(style: TransitionStyle, direction: number) {
-  if (style === "FADE") {
-    return {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      exit: { opacity: 0 }
-    };
+  switch (style) {
+    case "NONE":
+      return {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        exit: { opacity: 1 }
+      };
+    case "FADE":
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 }
+      };
+    case "ZOOM":
+      return {
+        initial: { opacity: 0, scale: 0.95 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 1.05 }
+      };
+    case "PAGE_FLIP":
+      return {
+        initial: { opacity: 0, rotateY: -24 * direction, transformPerspective: 1200, x: 80 * direction },
+        animate: { opacity: 1, rotateY: 0, transformPerspective: 1200, x: 0 },
+        exit: { opacity: 0, rotateY: 20 * direction, transformPerspective: 1200, x: -90 * direction }
+      };
+    case "VERTICAL_REVEAL":
+      return {
+        initial: { opacity: 0, y: 80 * direction, clipPath: "inset(100% 0 0 0 round 12px)" },
+        animate: { opacity: 1, y: 0, clipPath: "inset(0% 0 0 0 round 12px)" },
+        exit: { opacity: 0, y: -60 * direction, clipPath: "inset(0 0 100% 0 round 12px)" }
+      };
+    case "GLITCH_CUT":
+      return {
+        initial: { opacity: 0, x: 16 * direction, skewX: 6 * direction },
+        animate: { opacity: 1, x: 0, skewX: 0 },
+        exit: { opacity: 0, x: -20 * direction, skewX: -4 * direction }
+      };
+    case "WHIP_PAN":
+      return {
+        initial: { opacity: 0, x: 220 * direction, filter: "blur(8px)" },
+        animate: { opacity: 1, x: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, x: -220 * direction, filter: "blur(8px)" }
+      };
+    case "INK_BLEED":
+      return {
+        initial: { opacity: 0, scale: 1.02, filter: "contrast(0.8)" },
+        animate: { opacity: 1, scale: 1, filter: "contrast(1)" },
+        exit: { opacity: 0, scale: 0.985, filter: "contrast(1.12)" }
+      };
+    case "PARALLAX_SWEEP":
+      return {
+        initial: { opacity: 0, x: 90 * direction, y: 28, rotate: -1.2 * direction },
+        animate: { opacity: 1, x: 0, y: 0, rotate: 0 },
+        exit: { opacity: 0, x: -90 * direction, y: -24, rotate: 1.2 * direction }
+      };
+    case "SLIDE_RIGHT":
+    case "SLIDE_LEFT":
+    default: {
+      const shift = style === "SLIDE_RIGHT" ? -direction : direction;
+      return {
+        initial: { opacity: 0, x: 130 * shift, rotateY: 6 * shift },
+        animate: { opacity: 1, x: 0, rotateY: 0 },
+        exit: { opacity: 0, x: -130 * shift, rotateY: -4 * shift }
+      };
+    }
   }
-
-  if (style === "ZOOM") {
-    return {
-      initial: { opacity: 0, scale: 0.97 },
-      animate: { opacity: 1, scale: 1 },
-      exit: { opacity: 0, scale: 1.04 }
-    };
-  }
-
-  const shift = style === "SLIDE_RIGHT" ? -direction : direction;
-  return {
-    initial: { opacity: 0, x: 130 * shift, rotateY: 6 * shift },
-    animate: { opacity: 1, x: 0, rotateY: 0 },
-    exit: { opacity: 0, x: -130 * shift, rotateY: -4 * shift }
-  };
 }
 
 function extractPanels(body: string) {
@@ -69,6 +113,10 @@ function extractPanels(body: string) {
   }
 
   return chunks.slice(0, 6);
+}
+
+function transitionClassName(style: TransitionStyle) {
+  return `comic-canvas--${style.toLowerCase().replace(/_/g, "-")}`;
 }
 
 export function ReaderPage() {
@@ -153,7 +201,9 @@ export function ReaderPage() {
   const variants = createTransitionVariants(transitionStyle, direction);
   const currentChoices = currentPage.choices ?? [];
   const panelTexts = extractPanels(currentPage.body);
-  const panelImage = resolveAssetUrl(currentPage.imageUrl) || "/comic-placeholder.svg";
+  const panelImages = Array.isArray(currentPage.panelImageUrls) ? currentPage.panelImageUrls : [];
+  const fallbackPanelImage = resolveAssetUrl(currentPage.imageUrl) || "/comic-placeholder.svg";
+  const panelAnimationClassName = transitionClassName(currentPage.transitionStyle);
 
   const handleChoice = (targetPageId: string) => {
     const targetPage = pageMap.get(targetPageId);
@@ -228,7 +278,7 @@ export function ReaderPage() {
             initial={variants.initial}
             animate={variants.animate}
             exit={variants.exit}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.56, ease: [0.22, 1, 0.36, 1] }}
           >
             <Stack gap="md">
               <Group justify="space-between" align="center">
@@ -240,10 +290,15 @@ export function ReaderPage() {
                 </Badge>
               </Group>
 
-              <div className="comic-canvas">
+              <div className={`comic-canvas ${panelAnimationClassName}`}>
                 {panelTexts.map((panelText, index) => (
                   <article key={`${currentPage.id}-${index}`} className={`comic-panel panel-${index % 6}`}>
-                    <div className="comic-panel-image" style={{ backgroundImage: `url(${panelImage})` }} />
+                    <div
+                      className="comic-panel-image"
+                      style={{
+                        backgroundImage: `url(${resolveAssetUrl(panelImages[index]) || fallbackPanelImage})`
+                      }}
+                    />
                     <div className="comic-panel-ink" />
                     <p className={`comic-caption ${index % 2 === 0 ? "narration" : "speech"}`}>{panelText}</p>
                   </article>

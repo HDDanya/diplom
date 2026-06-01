@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <pattern id="hatch_roof" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#111" stroke-width="1" opacity="0.16" />
+    </pattern>
+    <linearGradient id="sky_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdfdfd" />
+      <stop offset="1" stop-color="#dfdfdf" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky_roof)" />
+  <rect width="1600" height="900" fill="url(#hatch_roof)" />
+  <path d="M0 720 L260 640 L430 680 L640 590 L820 670 L1020 610 L1230 690 L1450 600 L1600 650 L1600 900 L0 900 Z" fill="#e8e8e8" stroke="#111" stroke-width="5" />
+  <g stroke="#111" stroke-width="6" fill="none" opacity="0.9">
+    <path d="M110 710 V380" />
+    <path d="M300 690 V340" />
+    <path d="M490 680 V360" />
+    <path d="M705 650 V320" />
+    <path d="M920 670 V370" />
+    <path d="M1160 650 V310" />
+    <path d="M1380 620 V350" />
+  </g>
+  <g stroke="#111" stroke-width="8" fill="#f5f5f5">
+    <path d="M760 720 L820 520 L870 720 Z" />
+    <path d="M790 690 L820 560 L848 690 Z" fill="#111" />
+    <path d="M760 720 Q820 760 870 720" fill="#fff" />
+  </g>
+  <path d="M860 560 Q980 500 1060 430" stroke="#111" stroke-width="8" fill="none" stroke-linecap="round" />
+  <circle cx="1080" cy="420" r="24" fill="#fff" stroke="#111" stroke-width="6" />
+  <text x="120" y="130" font-family="Impact, Arial Black, sans-serif" font-size="92" fill="#111">CITY WATCH</text>
+  <rect x="118" y="148" width="430" height="12" fill="#111" />
+  <text x="1240" y="140" font-family="Courier New, monospace" font-size="42" fill="#111">PAGE 01</text>
+</svg>

@@ -1,1 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="#f8f8f8"/><g stroke="#111" stroke-width="6" fill="none"><path d="M130 820 L290 550 L430 690 L600 480 L790 680 L980 420 L1150 610 L1330 430 L1480 570"/><path d="M190 120 L190 860"/><path d="M360 90 L360 820"/><path d="M530 110 L530 840"/><path d="M700 90 L700 860"/><path d="M870 120 L870 820"/><path d="M1040 100 L1040 860"/><path d="M1210 110 L1210 820"/><path d="M1380 130 L1380 830"/></g><rect x="120" y="120" width="520" height="180" fill="#fff" stroke="#111" stroke-width="5"/><text x="150" y="190" font-family="Arial" font-size="52" fill="#111">01 • NIGHT ALLEY</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="halftone1" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.4" fill="#222" opacity="0.22"/>
+      <circle cx="9" cy="9" r="1.4" fill="#222" opacity="0.22"/>
+    </pattern>
+    <linearGradient id="night1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f1f1f1"/>
+      <stop offset="100%" stop-color="#c9c9c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#night1)"/>
+  <rect width="1200" height="675" fill="url(#halftone1)"/>
+  <rect x="40" y="40" width="1120" height="595" fill="none" stroke="#111" stroke-width="10"/>
+
+  <path d="M0 520 L140 390 L240 460 L360 340 L480 420 L620 280 L760 380 L890 300 L1020 420 L1200 320" fill="none" stroke="#1a1a1a" stroke-width="12"/>
+  <rect x="170" y="190" width="170" height="330" fill="#e7e7e7" stroke="#111" stroke-width="7"/>
+  <rect x="390" y="150" width="190" height="370" fill="#e2e2e2" stroke="#111" stroke-width="7"/>
+  <rect x="650" y="220" width="170" height="300" fill="#e7e7e7" stroke="#111" stroke-width="7"/>
+  <rect x="880" y="180" width="210" height="340" fill="#e0e0e0" stroke="#111" stroke-width="7"/>
+
+  <path d="M545 470 L605 320 L665 470 Z" fill="#111"/>
+  <circle cx="605" cy="288" r="40" fill="#f6f6f6" stroke="#111" stroke-width="8"/>
+  <path d="M585 285 Q605 270 625 285" fill="none" stroke="#111" stroke-width="5"/>
+  <rect x="565" y="355" width="80" height="28" fill="#f7f7f7" stroke="#111" stroke-width="5"/>
+
+  <text x="600" y="610" text-anchor="middle" font-family="Impact, sans-serif" font-size="54" fill="#111" letter-spacing="2">
+    SHADOW SENTINEL
+  </text>
+</svg>

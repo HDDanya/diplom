@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><rect width="1600" height="1000" fill="#f7f7f7"/><g stroke="#111" stroke-width="7" fill="none"><path d="M140 840 Q300 700 420 780 T700 760 T980 700 T1260 620 T1480 520"/><path d="M200 830 L520 260"/><path d="M440 830 L760 260"/><path d="M680 830 L1000 260"/><path d="M920 830 L1240 260"/><path d="M1160 830 L1480 260"/></g><rect x="980" y="120" width="450" height="140" fill="#fff" stroke="#111" stroke-width="5"/><text x="1010" y="205" font-family="Arial" font-size="52" fill="#111">03 • CHASE</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+  <defs>
+    <pattern id="speed" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(-20)">
+      <line x1="0" y1="0" x2="0" y2="18" stroke="#202020" stroke-width="2" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="675" fill="#f3f3f3"/>
+  <rect width="1200" height="675" fill="url(#speed)"/>
+  <rect x="30" y="30" width="1140" height="615" fill="none" stroke="#111" stroke-width="10"/>
+
+  <path d="M100 560 L260 330 L420 520 L570 260 L730 500 L910 230 L1100 500" fill="none" stroke="#111" stroke-width="16"/>
+  <path d="M360 520 L430 360 L500 520 Z" fill="#111"/>
+  <circle cx="430" cy="330" r="36" fill="#fdfdfd" stroke="#111" stroke-width="8"/>
+  <path d="M415 330 L445 330" stroke="#111" stroke-width="5"/>
+
+  <path d="M650 500 L700 380 L750 500 Z" fill="#111"/>
+  <circle cx="700" cy="350" r="32" fill="#fdfdfd" stroke="#111" stroke-width="8"/>
+  <rect x="520" y="90" width="160" height="60" fill="#f8f8f8" stroke="#111" stroke-width="6"/>
+  <text x="600" y="132" text-anchor="middle" font-family="Impact, sans-serif" font-size="34" fill="#111">CHASE!</text>
+
+  <text x="600" y="620" text-anchor="middle" font-family="Impact, sans-serif" font-size="58" fill="#111">METRO RUSH</text>
+</svg>

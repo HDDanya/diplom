@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <pattern id="tiles_subway" width="28" height="28" patternUnits="userSpaceOnUse">
+      <rect width="28" height="28" fill="none" stroke="#111" stroke-width="1" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="#f4f4f4"/>
+  <rect x="80" y="120" width="1440" height="680" fill="#fdfdfd" stroke="#111" stroke-width="7"/>
+  <rect x="80" y="120" width="1440" height="680" fill="url(#tiles_subway)"/>
+  <path d="M170 700 H1430" stroke="#111" stroke-width="9"/>
+  <g stroke="#111" stroke-width="6" fill="#fff">
+    <rect x="220" y="260" width="270" height="260"/>
+    <rect x="560" y="260" width="270" height="260"/>
+    <rect x="900" y="260" width="270" height="260"/>
+    <rect x="1240" y="260" width="170" height="260"/>
+  </g>
+  <g stroke="#111" stroke-width="7" fill="none" stroke-linecap="round">
+    <path d="M300 620 Q340 570 390 620"/>
+    <path d="M620 620 Q660 560 710 620"/>
+    <path d="M980 620 Q1020 560 1070 620"/>
+  </g>
+  <text x="108" y="102" font-family="Impact, Arial Black, sans-serif" font-size="84" fill="#111">SUBWAY EVAC</text>
+</svg>
