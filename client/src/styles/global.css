@@ -71,6 +71,56 @@ a {
   filter: contrast(1.06) saturate(1.04);
 }
 
+.catalog-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px 16px;
+  align-items: end;
+}
+
+.catalog-filter-author {
+  grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+  .catalog-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filter-author {
+    grid-column: span 1;
+  }
+}
+
+.editor-scene-preview,
+.editor-panel-preview {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #d7d7d7;
+  border-radius: 6px;
+  background: #f3f3f3;
+}
+
+.editor-scene-preview {
+  height: 180px;
+  max-height: 180px;
+}
+
+.editor-panel-preview {
+  height: 170px;
+  max-height: 170px;
+}
+
+.editor-scene-preview img,
+.editor-panel-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: contrast(1.06) saturate(1.04);
+}
+
 .reader-surface {
   border: 2px solid #131313;
   background: #fcfcfc;

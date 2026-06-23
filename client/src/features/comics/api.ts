@@ -1,5 +1,29 @@
 import { api } from "../../lib/api";
-import { ComicCard, ComicChoice, ComicDetail, ComicPage, ComicWritePayload, ReadComicResponse } from "../../types/api";
+import { ComicCard, ComicChoice, ComicDetail, ComicPage, ComicReview, ComicWritePayload, ReadComicResponse } from "../../types/api";
+
+export type PublicComicFilters = {
+  search?: string;
+  author?: string;
+  year?: string;
+  minYear?: string;
+  maxYear?: string;
+  minRating?: string;
+  minPages?: string;
+  maxPages?: string;
+  sort?: "updated" | "rating" | "bookmarks" | "title";
+};
+
+function cleanFilters(filters?: PublicComicFilters) {
+  if (!filters) {
+    return undefined;
+  }
+
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== undefined && String(value).trim().length > 0)
+  );
+
+  return Object.keys(params).length > 0 ? params : undefined;
+}
 
 function normalizeChoices(rawChoices: unknown): ComicChoice[] {
   if (!Array.isArray(rawChoices)) {
@@ -33,9 +57,9 @@ function normalizePage(rawPage: any): ComicPage {
   };
 }
 
-export async function fetchPublicComics(search?: string) {
+export async function fetchPublicComics(filters?: PublicComicFilters) {
   const response = await api.get<{ comics: ComicCard[] }>("/comics/public", {
-    params: search ? { search } : undefined
+    params: cleanFilters(filters)
   });
   return response.data.comics;
 }
@@ -89,6 +113,11 @@ export async function publishComic(comicId: string) {
 export async function toggleBookmark(comicId: string) {
   const response = await api.post<{ bookmarked: boolean }>(`/comics/${comicId}/bookmark`);
   return response.data;
+}
+
+export async function saveReview(comicId: string, payload: { rating: number; body: string }) {
+  const response = await api.post<{ review: ComicReview }>(`/comics/${comicId}/reviews`, payload);
+  return response.data.review;
 }
 
 export async function saveProgress(comicId: string, currentPageId: string) {

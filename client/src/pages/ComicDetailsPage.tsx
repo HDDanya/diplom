@@ -6,16 +6,19 @@ import {
   Group,
   Image,
   List,
+  Rating,
   Stack,
   Text,
+  Textarea,
   Title
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconBook2, IconBookmarkFilled, IconBookmarkPlus, IconCornerDownRight, IconPlayerPlay } from "@tabler/icons-react";
+import { IconBook2, IconBookmarkFilled, IconBookmarkPlus, IconCornerDownRight, IconPlayerPlay, IconStarFilled } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { LoadingScreen } from "../components/LoadingScreen";
-import { fetchComicBySlug, toggleBookmark } from "../features/comics/api";
+import { fetchComicBySlug, saveReview, toggleBookmark } from "../features/comics/api";
 import { useAuth } from "../hooks/useAuth";
 import { resolveAssetUrl } from "../lib/assets";
 
@@ -23,6 +26,8 @@ export function ComicDetailsPage() {
   const { slug = "" } = useParams();
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState("");
 
   const comicQuery = useQuery({
     queryKey: ["comic", slug],
@@ -46,6 +51,32 @@ export function ComicDetailsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["public-comics"] });
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    }
+  });
+
+  useEffect(() => {
+    const currentReview = comicQuery.data?.reviews?.find((review) => review.user.id === user?.id);
+    if (!currentReview) {
+      return;
+    }
+
+    setReviewRating(currentReview.rating);
+    setReviewBody(currentReview.body);
+  }, [comicQuery.data, user?.id]);
+
+  const reviewMutation = useMutation({
+    mutationFn: () => saveReview(comicQuery.data!.id, { rating: reviewRating, body: reviewBody }),
+    onSuccess: () => {
+      notifications.show({ title: "Рецензия сохранена", message: "Спасибо за оценку комикса", color: "dark" });
+      queryClient.invalidateQueries({ queryKey: ["comic", slug] });
+      queryClient.invalidateQueries({ queryKey: ["public-comics"] });
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Не удалось сохранить рецензию",
+        message: error.response?.data?.message ?? "Проверьте текст и оценку",
+        color: "red"
+      });
     }
   });
 
@@ -77,6 +108,14 @@ export function ComicDetailsPage() {
                 {comic.title}
               </Title>
               <Text c="dimmed">Автор: {comic.author.displayName}</Text>
+              <Group gap="xs">
+                <Badge color="yellow" variant="light" leftSection={<IconStarFilled size={12} />}>
+                  {comic.averageRating ? comic.averageRating.toFixed(1) : "нет оценок"}
+                </Badge>
+                <Badge color="gray" variant="light">
+                  {comic.reviewsCount ?? 0} рец.
+                </Badge>
+              </Group>
             </Stack>
             <Badge color={comic.status === "PUBLISHED" ? "dark" : "gray"} variant="filled">
               {comic.status === "PUBLISHED" ? "Опубликован" : "Черновик"}
@@ -118,6 +157,73 @@ export function ComicDetailsPage() {
           </Group>
         </Stack>
       </Card>
+
+      <Stack gap="sm">
+        <Title order={2} ff="Bebas Neue" size="2.2rem">
+          Рецензии
+        </Title>
+        <Divider />
+
+        {isAuthenticated && comic.status === "PUBLISHED" && (
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between">
+                <Text fw={700}>{comic.myReviewId ? "Обновить свою рецензию" : "Оставить рецензию"}</Text>
+                <Rating value={reviewRating} onChange={setReviewRating} fractions={1} />
+              </Group>
+              <Textarea
+                minRows={4}
+                value={reviewBody}
+                onChange={(event) => setReviewBody(event.currentTarget.value)}
+                placeholder="Что получилось, что зацепило, кому посоветуете этот комикс?"
+              />
+              <Group justify="end">
+                <Button
+                  color="dark"
+                  onClick={() => reviewMutation.mutate()}
+                  loading={reviewMutation.isPending}
+                  disabled={reviewBody.trim().length < 5}
+                >
+                  Сохранить рецензию
+                </Button>
+              </Group>
+            </Stack>
+          </Card>
+        )}
+
+        {!isAuthenticated && (
+          <Card withBorder>
+            <Text size="sm" c="dimmed">
+              Войдите в аккаунт, чтобы оставить оценку и рецензию.
+            </Text>
+          </Card>
+        )}
+
+        {(comic.reviews ?? []).length === 0 ? (
+          <Text c="dimmed">Рецензий пока нет.</Text>
+        ) : (
+          (comic.reviews ?? []).map((review) => (
+            <Card key={review.id} withBorder>
+              <Stack gap={6}>
+                <Group justify="space-between" align="start">
+                  <Stack gap={2}>
+                    <Text fw={700}>{review.user.displayName}</Text>
+                    <Text size="xs" c="dimmed">
+                      {new Date(review.updatedAt).toLocaleDateString("ru-RU")}
+                    </Text>
+                  </Stack>
+                  <Badge color="yellow" variant="light" leftSection={<IconStarFilled size={12} />}>
+                    {review.rating}/5
+                  </Badge>
+                </Group>
+                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                  {review.body}
+                </Text>
+              </Stack>
+            </Card>
+          ))
+        )}
+      </Stack>
 
       <Stack gap="sm">
         <Title order={2} ff="Bebas Neue" size="2.2rem">

@@ -286,6 +286,25 @@ async function main() {
     }
   });
 
+  await prisma.comicReview.upsert({
+    where: {
+      userId_comicId: {
+        userId: reader.id,
+        comicId: comic.id
+      }
+    },
+    update: {
+      rating: 5,
+      body: "Плотный интерактивный выпуск: много развилок, хороший темп и выразительные переходы между сценами."
+    },
+    create: {
+      userId: reader.id,
+      comicId: comic.id,
+      rating: 5,
+      body: "Плотный интерактивный выпуск: много развилок, хороший темп и выразительные переходы между сценами."
+    }
+  });
+
   const batmanSlug = "batman";
   const existingBatmanComic = await prisma.comic.findUnique({
     where: { slug: batmanSlug },
@@ -513,6 +532,25 @@ async function main() {
     create: {
       userId: reader.id,
       comicId: batmanComic.id
+    }
+  });
+
+  await prisma.comicReview.upsert({
+    where: {
+      userId_comicId: {
+        userId: reader.id,
+        comicId: batmanComic.id
+      }
+    },
+    update: {
+      rating: 4,
+      body: "Атмосферный детективный маршрут с понятными выборами и сильной финальной сценой."
+    },
+    create: {
+      userId: reader.id,
+      comicId: batmanComic.id,
+      rating: 4,
+      body: "Атмосферный детективный маршрут с понятными выборами и сильной финальной сценой."
     }
   });
 

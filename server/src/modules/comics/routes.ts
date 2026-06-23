@@ -36,6 +36,11 @@ const progressSchema = z.object({
   currentPageId: z.string().uuid()
 });
 
+const reviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  body: z.string().min(5).max(2000)
+});
+
 async function createUniqueSlug(app: any, title: string, currentComicId?: string) {
   const base = slugify(title, { lower: true, strict: true, trim: true }) || "comic";
   let candidate = base;
@@ -57,6 +62,21 @@ async function createUniqueSlug(app: any, title: string, currentComicId?: string
     index += 1;
     candidate = `${base}-${index}`;
   }
+}
+
+function getReviewSummary(reviews: Array<{ rating: number }>) {
+  if (reviews.length === 0) {
+    return {
+      averageRating: null,
+      reviewsCount: 0
+    };
+  }
+
+  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+  return {
+    averageRating: Number(averageRating.toFixed(1)),
+    reviewsCount: reviews.length
+  };
 }
 
 async function resolveViewerId(request: FastifyRequest): Promise<string | null> {
@@ -167,15 +187,40 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
   app.get("/public", async (request) => {
     const query = z
       .object({
-        search: z.string().optional()
+        search: z.string().optional(),
+        author: z.string().optional(),
+        year: z.coerce.number().int().min(1900).max(2100).optional(),
+        minYear: z.coerce.number().int().min(1900).max(2100).optional(),
+        maxYear: z.coerce.number().int().min(1900).max(2100).optional(),
+        minRating: z.coerce.number().min(1).max(5).optional(),
+        minPages: z.coerce.number().int().min(1).optional(),
+        maxPages: z.coerce.number().int().min(1).optional(),
+        sort: z.enum(["updated", "rating", "bookmarks", "title"]).optional().default("updated")
       })
       .parse(request.query);
 
     const viewerId = await resolveViewerId(request);
+    const minYear = query.year ?? query.minYear;
+    const maxYear = query.year ?? query.maxYear;
+    const createdAt =
+      minYear || maxYear
+        ? {
+            ...(minYear ? { gte: new Date(Date.UTC(minYear, 0, 1)) } : {}),
+            ...(maxYear ? { lt: new Date(Date.UTC(maxYear + 1, 0, 1)) } : {})
+          }
+        : undefined;
 
     const comics = await app.prisma.comic.findMany({
       where: {
         status: ComicStatus.PUBLISHED,
+        ...(createdAt ? { createdAt } : {}),
+        ...(query.author
+          ? {
+              author: {
+                displayName: { contains: query.author, mode: "insensitive" }
+              }
+            }
+          : {}),
         ...(query.search
           ? {
               OR: [
@@ -197,6 +242,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         pages: {
           select: { id: true }
         },
+        reviews: {
+          select: { rating: true }
+        },
         _count: {
           select: { bookmarks: true }
         }
@@ -215,8 +263,10 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
       bookmarks.forEach((bookmark) => bookmarkedComicIds.add(bookmark.comicId));
     }
 
-    return {
-      comics: comics.map((comic) => ({
+    const mappedComics = comics
+      .map((comic) => {
+        const reviewSummary = getReviewSummary(comic.reviews);
+        return {
         id: comic.id,
         slug: comic.slug,
         title: comic.title,
@@ -228,8 +278,29 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         author: comic.author,
         pagesCount: comic.pages.length,
         bookmarksCount: comic._count.bookmarks,
+          averageRating: reviewSummary.averageRating,
+          reviewsCount: reviewSummary.reviewsCount,
         isBookmarked: bookmarkedComicIds.has(comic.id)
-      }))
+        };
+      })
+      .filter((comic) => (query.minPages ? comic.pagesCount >= query.minPages : true))
+      .filter((comic) => (query.maxPages ? comic.pagesCount <= query.maxPages : true))
+      .filter((comic) => (query.minRating ? (comic.averageRating ?? 0) >= query.minRating : true))
+      .sort((left, right) => {
+        if (query.sort === "rating") {
+          return (right.averageRating ?? 0) - (left.averageRating ?? 0);
+        }
+        if (query.sort === "bookmarks") {
+          return right.bookmarksCount - left.bookmarksCount;
+        }
+        if (query.sort === "title") {
+          return left.title.localeCompare(right.title, "ru");
+        }
+        return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+      });
+
+    return {
+      comics: mappedComics
     };
   });
 
@@ -241,6 +312,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         pages: {
           select: { id: true }
         },
+        reviews: {
+          select: { rating: true }
+        },
         _count: {
           select: { bookmarks: true }
         }
@@ -248,7 +322,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
     });
 
     return {
-      comics: comics.map((comic) => ({
+      comics: comics.map((comic) => {
+        const reviewSummary = getReviewSummary(comic.reviews);
+        return {
         id: comic.id,
         slug: comic.slug,
         title: comic.title,
@@ -259,8 +335,11 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         updatedAt: comic.updatedAt,
         pagesCount: comic.pages.length,
         bookmarksCount: comic._count.bookmarks,
+          averageRating: reviewSummary.averageRating,
+          reviewsCount: reviewSummary.reviewsCount,
         isBookmarked: false
-      }))
+        };
+      })
     };
   });
 
@@ -286,6 +365,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
             pages: {
               select: { id: true }
             },
+            reviews: {
+              select: { rating: true }
+            },
             _count: {
               select: { bookmarks: true }
             }
@@ -295,7 +377,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
     });
 
     return {
-      comics: bookmarks.map((bookmark) => ({
+      comics: bookmarks.map((bookmark) => {
+        const reviewSummary = getReviewSummary(bookmark.comic.reviews);
+        return {
         id: bookmark.comic.id,
         slug: bookmark.comic.slug,
         title: bookmark.comic.title,
@@ -307,9 +391,12 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         author: bookmark.comic.author,
         pagesCount: bookmark.comic.pages.length,
         bookmarksCount: bookmark.comic._count.bookmarks,
+          averageRating: reviewSummary.averageRating,
+          reviewsCount: reviewSummary.reviewsCount,
         isBookmarked: true,
         bookmarkedAt: bookmark.createdAt
-      }))
+        };
+      })
     };
   });
 
@@ -333,6 +420,18 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
           },
           orderBy: { position: "asc" }
         },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                displayName: true,
+                avatarUrl: true
+              }
+            }
+          },
+          orderBy: { updatedAt: "desc" }
+        },
         _count: {
           select: { bookmarks: true }
         }
@@ -351,6 +450,7 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
     }
 
     let isBookmarked = false;
+    let myReviewId: string | null = null;
     if (viewerId) {
       const bookmark = await app.prisma.comicBookmark.findUnique({
         where: {
@@ -361,7 +461,9 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         }
       });
       isBookmarked = Boolean(bookmark);
+      myReviewId = comic.reviews.find((review) => review.userId === viewerId)?.id ?? null;
     }
+    const reviewSummary = getReviewSummary(comic.reviews);
 
     return {
       comic: {
@@ -376,7 +478,18 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
         createdAt: comic.createdAt,
         updatedAt: comic.updatedAt,
         bookmarksCount: comic._count.bookmarks,
+        averageRating: reviewSummary.averageRating,
+        reviewsCount: reviewSummary.reviewsCount,
         isBookmarked,
+        myReviewId,
+        reviews: comic.reviews.map((review) => ({
+          id: review.id,
+          rating: review.rating,
+          body: review.body,
+          createdAt: review.createdAt,
+          updatedAt: review.updatedAt,
+          user: review.user
+        })),
         pages: comic.pages.map((page) => ({
           id: page.id,
           pageKey: page.pageKey,
@@ -641,6 +754,50 @@ export const comicsRoutes: FastifyPluginAsync = async (app) => {
     });
 
     return { success: true };
+  });
+
+  app.post("/:comicId/reviews", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const params = z.object({ comicId: z.string().uuid() }).parse(request.params);
+    const payload = reviewSchema.parse(request.body);
+
+    const comic = await app.prisma.comic.findUnique({
+      where: { id: params.comicId },
+      select: { id: true, status: true }
+    });
+
+    if (!comic || comic.status !== ComicStatus.PUBLISHED) {
+      return reply.notFound("Комикс не найден");
+    }
+
+    const review = await app.prisma.comicReview.upsert({
+      where: {
+        userId_comicId: {
+          userId: request.authUser.userId,
+          comicId: params.comicId
+        }
+      },
+      update: {
+        rating: payload.rating,
+        body: payload.body.trim()
+      },
+      create: {
+        userId: request.authUser.userId,
+        comicId: params.comicId,
+        rating: payload.rating,
+        body: payload.body.trim()
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true
+          }
+        }
+      }
+    });
+
+    return { review };
   });
 
   app.get("/:comicId/progress", { preHandler: [app.authenticate] }, async (request, reply) => {

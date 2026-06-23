@@ -32,9 +32,24 @@ export type ComicCard = {
   updatedAt: string;
   pagesCount: number;
   bookmarksCount: number;
+  averageRating?: number | null;
+  reviewsCount?: number;
   isBookmarked?: boolean;
   bookmarkedAt?: string;
   author?: {
+    id: string;
+    displayName: string;
+    avatarUrl?: string | null;
+  };
+};
+
+export type ComicReview = {
+  id: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
     id: string;
     displayName: string;
     avatarUrl?: string | null;
@@ -72,7 +87,11 @@ export type ComicDetail = {
   createdAt: string;
   updatedAt: string;
   bookmarksCount: number;
+  averageRating?: number | null;
+  reviewsCount?: number;
   isBookmarked?: boolean;
+  myReviewId?: string | null;
+  reviews?: ComicReview[];
   author: {
     id: string;
     displayName: string;

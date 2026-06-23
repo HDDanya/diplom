@@ -38,6 +38,7 @@ model User {
   comics       Comic[]
   bookmarks    ComicBookmark[]
   readProgress ReadProgress[]
+  reviews      ComicReview[]
 }
 
 model Comic {
@@ -55,6 +56,22 @@ model Comic {
   pages         ComicPage[]
   bookmarks     ComicBookmark[]
   readProgress  ReadProgress[]
+  reviews       ComicReview[]
+}
+
+model ComicReview {
+  id        String   @id @default(uuid())
+  userId    String
+  comicId   String
+  rating    Int
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic     Comic    @relation(fields: [comicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, comicId])
+  @@index([comicId])
 }
 
 model ComicPage {
