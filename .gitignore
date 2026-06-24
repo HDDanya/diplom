@@ -8,6 +8,9 @@ server/dist
 server/node_modules
 client/node_modules
 coverage
+test-results
+playwright-report
+blob-report
 .DS_Store
 .vscode
 .idea

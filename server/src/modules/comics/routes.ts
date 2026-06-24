@@ -3,13 +3,21 @@ import { FastifyPluginAsync, FastifyRequest } from "fastify";
 import slugify from "slugify";
 import { z } from "zod";
 
+const imageUrlSchema = z
+  .string()
+  .max(500)
+  .refine(
+    (value) => value === "" || value.startsWith("/uploads/") || value.startsWith("https://") || value.startsWith("http://"),
+    "Изображение должно быть локальным /uploads URL или HTTP(S)-ссылкой"
+  );
+
 const pageInputSchema = z.object({
   pageKey: z.string().min(1).max(64).regex(/^[a-zA-Z0-9_-]+$/),
   title: z.string().min(1).max(120),
   body: z.string().min(1).max(4000),
-  imageUrl: z.string().max(500).optional().or(z.literal("")),
-  panelImageUrls: z.array(z.string().max(500)).max(12).optional().default([]),
-  sketchPrompt: z.string().max(240).optional().or(z.literal("")),
+  imageUrl: imageUrlSchema.optional().or(z.literal("")),
+  panelImageUrls: z.array(imageUrlSchema).max(12).optional().default([]),
+  sketchPrompt: z.string().max(1000).optional().or(z.literal("")),
   transitionStyle: z.nativeEnum(TransitionStyle).default(TransitionStyle.SLIDE_LEFT),
   position: z.number().int().min(1),
   isStart: z.boolean().default(false),
@@ -20,6 +28,7 @@ const pageInputSchema = z.object({
         targetPageKey: z.string().min(1).max(64)
       })
     )
+    .max(8)
     .default([])
 });
 
@@ -27,9 +36,9 @@ const comicWriteSchema = z.object({
   title: z.string().min(2).max(140),
   summary: z.string().min(10).max(700),
   script: z.string().max(5000).optional().or(z.literal("")),
-  coverImageUrl: z.string().max(500).optional().or(z.literal("")),
+  coverImageUrl: imageUrlSchema.optional().or(z.literal("")),
   status: z.nativeEnum(ComicStatus).optional().default(ComicStatus.DRAFT),
-  pages: z.array(pageInputSchema).min(1)
+  pages: z.array(pageInputSchema).min(1).max(100)
 });
 
 const progressSchema = z.object({

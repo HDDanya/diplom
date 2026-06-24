@@ -26,7 +26,11 @@ const envSchema = z.object({
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL: z.string().default("7d"),
   CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
-  OPENAI_API_KEY: z.string().min(1).optional()
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_IMAGE_MODEL: z.string().min(1).default("gpt-image-1"),
+  OPENAI_IMAGE_QUALITY: z.enum(["low", "medium", "high"]).default("medium"),
+  OPENAI_IMAGE_MODERATION: z.enum(["auto", "low"]).default("low"),
+  OPENAI_TIMEOUT_MS: z.coerce.number().int().min(10_000).max(300_000).default(120_000)
 });
 
 export const env = envSchema.parse(process.env);

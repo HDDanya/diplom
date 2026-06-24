@@ -8,6 +8,9 @@
   --ink-text: #111111;
   --ink-muted: #5a5a5a;
   --ink-accent: #292929;
+  --ink-yellow: #f5c842;
+  --ink-cyan: #6fd6e5;
+  --ink-coral: #ff735c;
 }
 
 * {
@@ -20,21 +23,42 @@ body {
   font-family: "Space Grotesk", "Manrope", sans-serif;
   color: var(--ink-text);
   background:
-    radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.035), transparent 30%),
-    radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.03), transparent 28%),
-    repeating-linear-gradient(
-      -12deg,
-      rgba(0, 0, 0, 0.022) 0,
-      rgba(0, 0, 0, 0.022) 1px,
-      transparent 1px,
-      transparent 14px
-    ),
+    repeating-linear-gradient(-12deg, rgba(0, 0, 0, 0.018) 0, rgba(0, 0, 0, 0.018) 1px, transparent 1px, transparent 14px),
     var(--ink-bg);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink-cyan);
+  outline-offset: 2px;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 2px solid var(--ink-border);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.mobile-navigation-trigger {
+  display: none;
+}
+
+.app-brand {
+  white-space: nowrap;
 }
 
 ::selection {
@@ -46,6 +70,12 @@ a {
   border: 2px solid var(--ink-border);
   background: linear-gradient(135deg, #fff, #f8f8f8);
   box-shadow: 10px 10px 0 #0f0f0f;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.comic-list-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 10px 14px 0 #0f0f0f;
 }
 
 .comic-list-card {
@@ -69,6 +99,12 @@ a {
   object-fit: cover;
   display: block;
   filter: contrast(1.06) saturate(1.04);
+  transition: transform 260ms ease, filter 260ms ease;
+}
+
+.comic-list-card:hover .comic-cover-image {
+  transform: scale(1.025);
+  filter: contrast(1.08) saturate(1.12);
 }
 
 .catalog-filter-grid {
@@ -99,6 +135,81 @@ a {
   border: 1px solid #d7d7d7;
   border-radius: 6px;
   background: #f3f3f3;
+}
+
+.editor-page-card {
+  scroll-margin-top: 98px;
+}
+
+.generated-variants {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.generated-variant {
+  padding: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 2px solid #bcbcbc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.generated-variant.is-active {
+  border-color: #111;
+  box-shadow: 3px 3px 0 var(--ink-yellow);
+}
+
+.generated-variant img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-graph-scroll {
+  overflow: auto;
+  max-width: 100%;
+  border: 2px solid #111;
+  background:
+    linear-gradient(rgba(17, 17, 17, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, 0.06) 1px, transparent 1px),
+    #fafafa;
+  background-size: 24px 24px;
+}
+
+.story-graph-canvas {
+  position: relative;
+}
+
+.story-graph-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.story-graph-node {
+  position: absolute;
+  width: 190px;
+  height: 92px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.story-graph-node:active {
+  cursor: grabbing;
+}
+
+.story-graph-node-paper {
+  height: 100%;
+  border: 2px solid #111;
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 #111;
+  background: #fff;
+  cursor: pointer;
 }
 
 .editor-scene-preview {
@@ -309,6 +420,46 @@ a {
   animation-name: panelParallaxSweep;
 }
 
+.comic-canvas--rotate-in .comic-panel {
+  animation-name: panelRotateIn;
+}
+
+.comic-canvas--blur-dissolve .comic-panel {
+  animation-name: panelBlurDissolve;
+}
+
+.comic-canvas--shutter .comic-panel {
+  animation-name: panelShutter;
+}
+
+.comic-canvas--ripple .comic-panel {
+  animation-name: panelRipple;
+}
+
+.comic-canvas--flash .comic-panel {
+  animation-name: panelFlash;
+}
+
+.comic-canvas--panel-stagger .comic-panel {
+  animation-name: panelStagger;
+}
+
+.comic-canvas--comic-burst .comic-panel {
+  animation-name: panelComicBurst;
+}
+
+.comic-canvas--tilt-drop .comic-panel {
+  animation-name: panelTiltDrop;
+}
+
+.comic-canvas--curtain .comic-panel {
+  animation-name: panelCurtain;
+}
+
+.comic-canvas--focus-pull .comic-panel {
+  animation-name: panelFocusPull;
+}
+
 .comic-canvas--none .comic-panel {
   animation-name: panelNone;
   animation-duration: 120ms;
@@ -435,12 +586,71 @@ a {
   }
 }
 
-@media (max-width: 900px) {
-  .comic-canvas {
-    grid-template-columns: 1fr;
+@keyframes panelRotateIn {
+  from { opacity: 0; transform: rotate(-7deg) scale(0.92); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@keyframes panelBlurDissolve {
+  from { opacity: 0; filter: blur(16px) saturate(0.4); }
+  to { opacity: 1; filter: blur(0) saturate(1); }
+}
+
+@keyframes panelShutter {
+  from { opacity: 0; clip-path: inset(0 50% 0 50%); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes panelRipple {
+  from { opacity: 0; transform: scale(0.82); border-radius: 50%; }
+  to { opacity: 1; transform: scale(1); border-radius: 0; }
+}
+
+@keyframes panelFlash {
+  0% { opacity: 0; filter: brightness(3) contrast(0.5); }
+  45% { opacity: 1; filter: brightness(1.45) contrast(0.8); }
+  100% { opacity: 1; filter: brightness(1) contrast(1); }
+}
+
+@keyframes panelStagger {
+  from { opacity: 0; transform: translateY(45px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes panelComicBurst {
+  0% { opacity: 0; transform: scale(0.48) rotate(-4deg); }
+  75% { opacity: 1; transform: scale(1.04) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes panelTiltDrop {
+  from { opacity: 0; transform: translateY(-90px) rotate(-8deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+@keyframes panelCurtain {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes panelFocusPull {
+  from { opacity: 0; transform: scale(1.1); filter: blur(12px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@media (max-width: 980px) {
+  .desktop-navigation {
+    display: none;
   }
 
-  .comic-panel,
+  .mobile-navigation-trigger {
+    display: block;
+  }
+
+  .comic-canvas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .panel-0,
   .panel-1,
   .panel-2,
@@ -451,8 +661,82 @@ a {
     min-height: 220px;
   }
 
+  .panel-0,
+  .panel-5 {
+    grid-column: span 2;
+  }
+
   .comic-caption {
     max-width: 92%;
     font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-header {
+    padding: 12px !important;
+  }
+
+  .app-main {
+    padding-top: 18px !important;
+    padding-bottom: 30px !important;
+  }
+
+  .app-brand {
+    font-size: 1.6rem !important;
+  }
+
+  .ink-grid {
+    box-shadow: 5px 5px 0 #0f0f0f;
+  }
+
+  .comic-cover-box {
+    height: 210px;
+  }
+
+  .comic-canvas {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .comic-panel,
+  .panel-0,
+  .panel-1,
+  .panel-2,
+  .panel-3,
+  .panel-4,
+  .panel-5 {
+    grid-column: span 1;
+    min-height: 230px;
+    box-shadow: 3px 3px 0 #111;
+  }
+
+  .comic-caption {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .comic-caption.narration,
+  .comic-caption.speech {
+    padding: 8px 10px;
+  }
+
+  .reader-surface {
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+  }
+
+  .generated-variants {
+    grid-template-columns: repeat(2, minmax(64px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
   }
 }

@@ -12,7 +12,8 @@
   - страницы,
   - стартовая точка,
   - переходы/выборы между страницами,
-  - стили переходов (`SLIDE_LEFT`, `SLIDE_RIGHT`, `FADE`, `ZOOM`, `NONE`).
+  - drag-and-drop граф ветвлений,
+  - 20 анимированных стилей переходов и режим без анимации.
 - Превью создаваемого комикса прямо в редакторе.
 - Черновики и публикация.
 - Публичный каталог с фильтрами по названию, автору, году, оценкам и количеству страниц.
@@ -24,11 +25,20 @@
 - Загрузка изображений как файлов (без внешних ссылок):
   - обложка комикса,
   - изображения для отдельных страниц.
-- Шаблоны иллюстраций страниц (визуальные пресеты) и автогенерация `prompt` из сцены.
-- AI-генерация кадра по prompt прямо в редакторе страниц.
+- Шаблоны из реальных public-domain страниц и обложек классических комиксов.
+- AI-генерация кадра по prompt прямо в редакторе страниц:
+  - 1–4 варианта за запрос,
+  - настройка визуального стиля,
+  - текстовый character consistency guide,
+  - понятная диагностика ключа, прав доступа, квоты и таймаута.
 - Генерация черновой структуры страниц из сценария (по абзацам).
-- Ч/б современный интерфейс в стилистике sketch/noir.
-- Расширенный seed-сюжет `City Of Ink` (8 сцен и разветвлённый финал).
+- Адаптивный интерфейс для desktop, планшетов и смартфонов.
+- 12 опубликованных demo-комиксов: по 17 страниц, 24 перехода, 9 ветвящихся узлов и финальная сцена с 4 видимыми вариантами исхода.
+- Полноценные фанатские истории `Бэтмен: Четыре минуты до полуночи` и `Пацаны: Архив Vought`.
+- Для десяти классических историй используются отдельные наборы public-domain сканов Internet Archive; Batman и The Boys получили тематические CC-изображения Wikimedia Commons.
+- Lazy loading страниц, code splitting и отдельные vendor chunks.
+- Unit/component тесты на Vitest и e2e тесты на Playwright.
+- Rate limiting, CSP/Helmet, проверка сигнатур загружаемых файлов и метрики API.
 
 ## Технологии
 
@@ -80,6 +90,9 @@ cp .env.example .env
 
 ```env
 OPENAI_API_KEY="ваш_ключ"
+OPENAI_IMAGE_MODEL="gpt-image-1"
+OPENAI_IMAGE_QUALITY="medium"
+OPENAI_TIMEOUT_MS=120000
 ```
 
 4. Примените миграции и сиды:
@@ -97,6 +110,32 @@ pnpm dev
 
 - frontend: `http://localhost:5173`
 - backend: `http://localhost:4000`
+
+## Проверка
+
+```bash
+pnpm build
+pnpm test
+pnpm exec playwright install chromium
+pnpm test:e2e
+pnpm audit
+```
+
+На момент последней проверки:
+
+- frontend unit/component: 3 теста;
+- backend unit/data/security: 8 тестов;
+- Playwright desktop/mobile: 10 сценариев;
+- `pnpm audit`: известных уязвимостей нет;
+- стартовый JS chunk: около 14 КБ вместо прежнего монолитного bundle около 668 КБ.
+
+## Диагностика AI
+
+- `GET /api/health` показывает, найден ли ключ и какая модель настроена.
+- `GET /api/uploads/generate/status` доступен авторизованному пользователю.
+- `POST /api/uploads/generate` возвращает коды `OPENAI_INVALID_KEY`, `OPENAI_ACCESS_DENIED`, `OPENAI_QUOTA`, `OPENAI_TIMEOUT`, `OPENAI_SAFETY_BLOCKED`.
+- При `moderation_blocked` сервер один раз повторяет запрос с нейтральным family-friendly prompt и сообщает `safetyAdjusted`.
+- После изменения `.env` сервер нужно перезапустить.
 
 ## Демо-аккаунты
 
@@ -119,15 +158,22 @@ pnpm dev
 - `POST /api/comics/:comicId/reviews`
 - `POST /api/uploads/image`
 - `POST /api/uploads/generate`
+- `GET /api/uploads/generate/status`
+- `GET /api/health`
+- `GET /api/metrics`
 - `POST /api/comics`
 - `PUT /api/comics/:comicId`
 - `POST /api/comics/:comicId/publish`
 - `POST /api/comics/:comicId/bookmark`
 - `POST /api/comics/:comicId/progress`
 
-## Что можно доработать дальше
+## Возможное развитие после MVP
 
-- drag-and-drop граф ветвлений с визуальными узлами;
-- улучшение генерации изображений: control style/character consistency, batch variants;
-- lazy-loading и code splitting для снижения стартового bundle;
-- e2e тесты (Playwright) и метрики наблюдаемости.
+- хранение refresh token только в HttpOnly cookie и серверная ротация сессий;
+- совместное редактирование комикса в реальном времени;
+- объектное хранилище S3/MinIO вместо локального каталога uploads;
+- визуальная проверка связности графа и поиск недостижимых сцен;
+- экспорт в PDF/CBZ и PWA-режим офлайн-чтения;
+- Prometheus/Grafana и централизованное хранение логов.
+
+Источники изображений перечислены в [ASSET_SOURCES.md](./ASSET_SOURCES.md), а материал для пояснительной записки собран в [DIPLOMA_EXPLANATORY_NOTE.md](./DIPLOMA_EXPLANATORY_NOTE.md).

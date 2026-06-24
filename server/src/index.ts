@@ -15,14 +15,24 @@ import { uploadsRoutes } from "./modules/uploads/routes";
 import { authPlugin } from "./plugins/auth";
 import { prismaPlugin } from "./plugins/prisma";
 
-async function buildServer() {
+export async function buildServer() {
   const app = Fastify({
-    logger: true
+    logger: true,
+    bodyLimit: 1024 * 1024,
+    requestTimeout: 30_000
   });
 
   await app.register(sensible);
   await app.register(helmet, {
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        connectSrc: ["'self'"]
+      }
+    },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   });
   await app.register(cors, {
@@ -49,7 +59,42 @@ async function buildServer() {
   await app.register(prismaPlugin);
   await app.register(authPlugin);
 
-  app.get("/api/health", async () => ({ status: "ok" }));
+  const metrics = {
+    requests: 0,
+    errors: 0,
+    totalDurationMs: 0
+  };
+  const requestStartedAt = new WeakMap<object, number>();
+
+  app.addHook("onRequest", async (request, reply) => {
+    requestStartedAt.set(request, performance.now());
+    reply.header("x-request-id", request.id);
+  });
+
+  app.addHook("onResponse", async (request, reply) => {
+    const startedAt = requestStartedAt.get(request) ?? performance.now();
+    const durationMs = performance.now() - startedAt;
+    metrics.requests += 1;
+    metrics.totalDurationMs += durationMs;
+    if (reply.statusCode >= 500) {
+      metrics.errors += 1;
+    }
+    request.log.info({ durationMs: Number(durationMs.toFixed(1)), statusCode: reply.statusCode }, "request completed");
+  });
+
+  app.get("/api/health", async () => ({
+    status: "ok",
+    aiConfigured: Boolean(env.OPENAI_API_KEY),
+    imageModel: env.OPENAI_IMAGE_MODEL,
+    uptimeSeconds: Math.round(process.uptime())
+  }));
+
+  app.get("/api/metrics", async () => ({
+    requests: metrics.requests,
+    errors: metrics.errors,
+    averageDurationMs:
+      metrics.requests === 0 ? 0 : Number((metrics.totalDurationMs / metrics.requests).toFixed(1))
+  }));
 
   await app.register(authRoutes, { prefix: "/api/auth" });
   await app.register(uploadsRoutes, { prefix: "/api/uploads" });
@@ -79,4 +124,6 @@ async function start() {
   }
 }
 
-void start();
+if (require.main === module) {
+  void start();
+}

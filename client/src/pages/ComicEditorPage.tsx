@@ -25,42 +25,40 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LoadingScreen } from "../components/LoadingScreen";
+import { StoryGraph } from "../components/StoryGraph";
 import {
   createComic,
+  fetchImageGenerationStatus,
   fetchComicBySlug,
-  generateComicImage,
+  generateComicImages,
   publishComic,
   updateComic,
   uploadComicImage
 } from "../features/comics/api";
 import { resolveAssetUrl } from "../lib/assets";
+import {
+  createTransitionVariants,
+  TRANSITIONS,
+  TRANSITION_LABELS,
+  transitionClassName
+} from "../lib/transitions";
 import { ComicDetail, ComicStatus, ComicWritePage, TransitionStyle } from "../types/api";
 
-const TRANSITIONS: TransitionStyle[] = [
-  "SLIDE_LEFT",
-  "SLIDE_RIGHT",
-  "FADE",
-  "ZOOM",
-  "PAGE_FLIP",
-  "VERTICAL_REVEAL",
-  "GLITCH_CUT",
-  "WHIP_PAN",
-  "INK_BLEED",
-  "PARALLAX_SWEEP",
-  "NONE"
-];
-
-const UNIVERSAL_COMIC_WEB_IMAGES = {
-  blueBeetle01: "https://upload.wikimedia.org/wikipedia/commons/7/79/Blue_Beetle_Number_1_Cover.jpg",
-  planet01: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Planet_Comics_01.jpg",
-  planet03: "https://upload.wikimedia.org/wikipedia/commons/e/ef/Planet_Comics_03.jpg",
-  planet05: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Planet_Comics_05.jpg",
-  planet11: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Planet_Comics_11.jpg",
-  planet12: "https://upload.wikimedia.org/wikipedia/commons/1/18/Planet_Comics_12.jpg",
-  planet57: "https://upload.wikimedia.org/wikipedia/commons/6/68/Planet_Comics_57.jpg",
-  planet69: "https://upload.wikimedia.org/wikipedia/commons/a/af/Planet_Comics_69.jpg",
-  planetNo1HiRes: "https://upload.wikimedia.org/wikipedia/commons/5/55/Planet_Comics_no._1_%28high-res%29.jpg",
-  planetNo2Cover: "https://upload.wikimedia.org/wikipedia/commons/4/43/Planet_Comics_no._2_%28cover%29.jpg"
+const REAL_COMIC_IMAGES = {
+  mysta: "/uploads/seed/public-domain/pages/planet-37-page-12.jpg",
+  cerebex: "/uploads/seed/public-domain/pages/planet-73-page-01.jpg",
+  starPirate: "/uploads/seed/public-domain/pages/star-pirate-50-page.jpg",
+  auro: "/uploads/seed/public-domain/pages/auro-jupiter-page.jpg",
+  fictionHouse: "/uploads/seed/public-domain/pages/fiction-house-ad.jpg",
+  planet01: "/uploads/seed/public-domain/planet-01.jpg",
+  planet02: "/uploads/seed/public-domain/planet-02.jpg",
+  planet03: "/uploads/seed/public-domain/planet-03.jpg",
+  planet05: "/uploads/seed/public-domain/planet-05.jpg",
+  planet11: "/uploads/seed/public-domain/planet-11.jpg",
+  planet12: "/uploads/seed/public-domain/planet-12.jpg",
+  planet57: "/uploads/seed/public-domain/planet-57.jpg",
+  planet69: "/uploads/seed/public-domain/planet-69.jpg",
+  blueBeetle: "/uploads/seed/public-domain/blue-beetle-01.jpg"
 } as const;
 
 const SCENE_TEMPLATES: Array<{
@@ -84,11 +82,11 @@ const SCENE_TEMPLATES: Array<{
 Финальная реплика или находка задаёт выбор: действовать сразу или собрать больше информации.`,
     sketchPrompt:
       "universal comic opening scene, clear location, protagonist silhouette, dramatic but genre-neutral mood, polished inks",
-    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planetNo1HiRes,
+    imageUrl: REAL_COMIC_IMAGES.planet01,
     panelImageUrls: [
-      UNIVERSAL_COMIC_WEB_IMAGES.planetNo1HiRes,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet03,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet12
+      REAL_COMIC_IMAGES.planet01,
+      REAL_COMIC_IMAGES.mysta,
+      REAL_COMIC_IMAGES.planet03
     ],
     transitionStyle: "PAGE_FLIP"
   },
@@ -103,11 +101,11 @@ const SCENE_TEMPLATES: Array<{
 В конце сцены появляется новая угроза: кто-то пытается скрыть следы или опередить героя.`,
     sketchPrompt:
       "universal comic investigation scene, evidence, tense composition, expressive lighting, detailed inks",
-    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet11,
+    imageUrl: REAL_COMIC_IMAGES.cerebex,
     panelImageUrls: [
-      UNIVERSAL_COMIC_WEB_IMAGES.planet11,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet01,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet57
+      REAL_COMIC_IMAGES.cerebex,
+      REAL_COMIC_IMAGES.fictionHouse,
+      REAL_COMIC_IMAGES.planet11
     ],
     transitionStyle: "INK_BLEED"
   },
@@ -122,11 +120,11 @@ const SCENE_TEMPLATES: Array<{
 Последняя фраза превращает разговор в развилку с моральным или тактическим выбором.`,
     sketchPrompt:
       "universal comic dialogue scene, expressive faces, speech bubbles, cinematic framing, polished comic finish",
-    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet57,
+    imageUrl: REAL_COMIC_IMAGES.mysta,
     panelImageUrls: [
-      UNIVERSAL_COMIC_WEB_IMAGES.planet57,
-      UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet03
+      REAL_COMIC_IMAGES.mysta,
+      REAL_COMIC_IMAGES.auro,
+      REAL_COMIC_IMAGES.starPirate
     ],
     transitionStyle: "VERTICAL_REVEAL"
   },
@@ -141,11 +139,11 @@ const SCENE_TEMPLATES: Array<{
 Сцена заканчивается выбором между быстрым решением и более рискованным, но важным действием.`,
     sketchPrompt:
       "dynamic universal comic action scene, speed lines, high contrast lighting, readable silhouettes, premium print look",
-    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+    imageUrl: REAL_COMIC_IMAGES.starPirate,
     panelImageUrls: [
-      UNIVERSAL_COMIC_WEB_IMAGES.planet69,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet05,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet12
+      REAL_COMIC_IMAGES.starPirate,
+      REAL_COMIC_IMAGES.auro,
+      REAL_COMIC_IMAGES.planet69
     ],
     transitionStyle: "WHIP_PAN"
   },
@@ -160,11 +158,11 @@ const SCENE_TEMPLATES: Array<{
 Финальный кадр закрывает сюжетную линию и оставляет место для послевкусия или продолжения.`,
     sketchPrompt:
       "universal comic finale scene, dramatic resolution, symbolic composition, cinematic palette, ultra-detailed comic art",
-    imageUrl: UNIVERSAL_COMIC_WEB_IMAGES.planetNo2Cover,
+    imageUrl: REAL_COMIC_IMAGES.planet57,
     panelImageUrls: [
-      UNIVERSAL_COMIC_WEB_IMAGES.planetNo2Cover,
-      UNIVERSAL_COMIC_WEB_IMAGES.planet69,
-      UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01
+      REAL_COMIC_IMAGES.planet57,
+      REAL_COMIC_IMAGES.cerebex,
+      REAL_COMIC_IMAGES.planet69
     ],
     transitionStyle: "PARALLAX_SWEEP"
   }
@@ -172,51 +170,59 @@ const SCENE_TEMPLATES: Array<{
 
 const ILLUSTRATION_PRESETS = [
   {
-    label: "Pulp-завязка",
-    description: "Яркая обложечная сцена для старта истории",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet01,
+    id: "comic-opening",
+    label: "Planet Comics #1",
+    description: "Оригинальная public-domain обложка 1940 года",
+    url: REAL_COMIC_IMAGES.planet01,
     promptSeed: "retro comic opening scene, dramatic location background, vintage print texture"
   },
   {
-    label: "Приключение",
-    description: "Глубокая перспектива для пути, открытия или побега",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet03,
+    id: "comic-adventure",
+    label: "Star Pirate",
+    description: "Настоящая страница Planet Comics #50",
+    url: REAL_COMIC_IMAGES.starPirate,
     promptSeed: "adventure comic background, dynamic perspective, halftone texture, location-focused art"
   },
   {
-    label: "Экшен",
-    description: "Динамичный фон для столкновений и кульминаций",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet05,
+    id: "comic-action",
+    label: "Auro",
+    description: "Настоящая страница Auro, Lord of Jupiter",
+    url: REAL_COMIC_IMAGES.auro,
     promptSeed: "vintage action comic environment, energetic color palette, rich inks"
   },
   {
-    label: "Техно-сцена",
-    description: "Локация для лабораторий, штабов и сложных планов",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet11,
+    id: "comic-technology",
+    label: "Cerebex",
+    description: "Роботизированная сцена из Planet Comics #73",
+    url: REAL_COMIC_IMAGES.cerebex,
     promptSeed: "classic comic technical location, industrial skyline, clean panel readability"
   },
   {
-    label: "Развилка",
-    description: "Обложечный кадр для выбора и смены маршрута",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet12,
+    id: "comic-choice",
+    label: "Mysta",
+    description: "Splash page из Planet Comics #37",
+    url: REAL_COMIC_IMAGES.mysta,
     promptSeed: "retro comic location shot, cinematic framing, print-era halftone styling"
   },
   {
-    label: "Нуар",
-    description: "Тёмная сцена для тайны, угрозы или напряжения",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet57,
+    id: "comic-noir",
+    label: "Blue Beetle #1",
+    description: "Public-domain обложка классического детектива",
+    url: REAL_COMIC_IMAGES.blueBeetle,
     promptSeed: "dark comic backdrop, noir lighting, bold ink contours, environment-focused scene"
   },
   {
-    label: "Кульминация",
-    description: "Контрастный кадр для крупных событий и финалов",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.planet69,
+    id: "comic-climax",
+    label: "Planet Comics #69",
+    description: "Оригинальная обложка космического выпуска",
+    url: REAL_COMIC_IMAGES.planet69,
     promptSeed: "high-contrast vintage comic scene, dramatic sky, epic location composition"
   },
   {
-    label: "Классика",
-    description: "Нейтральная ретро-комиксная стилистика",
-    url: UNIVERSAL_COMIC_WEB_IMAGES.blueBeetle01,
+    id: "comic-classic",
+    label: "Fiction House",
+    description: "Настоящая рекламная страница издательства",
+    url: REAL_COMIC_IMAGES.fictionHouse,
     promptSeed: "golden age comic style background, bold vintage inks, location-ready composition"
   }
 ];
@@ -332,79 +338,6 @@ function ensurePanelImageArrayLength(images: string[] | undefined, expectedLengt
   return base;
 }
 
-function createPreviewTransitionVariants(style: TransitionStyle, direction: number) {
-  switch (style) {
-    case "NONE":
-      return {
-        initial: { opacity: 1 },
-        animate: { opacity: 1 },
-        exit: { opacity: 1 }
-      };
-    case "FADE":
-      return {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 }
-      };
-    case "ZOOM":
-      return {
-        initial: { opacity: 0, scale: 0.95 },
-        animate: { opacity: 1, scale: 1 },
-        exit: { opacity: 0, scale: 1.05 }
-      };
-    case "PAGE_FLIP":
-      return {
-        initial: { opacity: 0, rotateY: -24 * direction, transformPerspective: 1200, x: 80 * direction },
-        animate: { opacity: 1, rotateY: 0, transformPerspective: 1200, x: 0 },
-        exit: { opacity: 0, rotateY: 20 * direction, transformPerspective: 1200, x: -90 * direction }
-      };
-    case "VERTICAL_REVEAL":
-      return {
-        initial: { opacity: 0, y: 80 * direction, clipPath: "inset(100% 0 0 0 round 12px)" },
-        animate: { opacity: 1, y: 0, clipPath: "inset(0% 0 0 0 round 12px)" },
-        exit: { opacity: 0, y: -60 * direction, clipPath: "inset(0 0 100% 0 round 12px)" }
-      };
-    case "GLITCH_CUT":
-      return {
-        initial: { opacity: 0, x: 16 * direction, skewX: 6 * direction },
-        animate: { opacity: 1, x: 0, skewX: 0 },
-        exit: { opacity: 0, x: -20 * direction, skewX: -4 * direction }
-      };
-    case "WHIP_PAN":
-      return {
-        initial: { opacity: 0, x: 220 * direction, filter: "blur(8px)" },
-        animate: { opacity: 1, x: 0, filter: "blur(0px)" },
-        exit: { opacity: 0, x: -220 * direction, filter: "blur(8px)" }
-      };
-    case "INK_BLEED":
-      return {
-        initial: { opacity: 0, scale: 1.02, filter: "contrast(0.8)" },
-        animate: { opacity: 1, scale: 1, filter: "contrast(1)" },
-        exit: { opacity: 0, scale: 0.985, filter: "contrast(1.12)" }
-      };
-    case "PARALLAX_SWEEP":
-      return {
-        initial: { opacity: 0, x: 90 * direction, y: 28, rotate: -1.2 * direction },
-        animate: { opacity: 1, x: 0, y: 0, rotate: 0 },
-        exit: { opacity: 0, x: -90 * direction, y: -24, rotate: 1.2 * direction }
-      };
-    case "SLIDE_RIGHT":
-    case "SLIDE_LEFT":
-    default: {
-      const shift = style === "SLIDE_RIGHT" ? -direction : direction;
-      return {
-        initial: { opacity: 0, x: 130 * shift, rotateY: 6 * shift },
-        animate: { opacity: 1, x: 0, rotateY: 0 },
-        exit: { opacity: 0, x: -130 * shift, rotateY: -4 * shift }
-      };
-    }
-  }
-}
-
-function transitionClassName(style: TransitionStyle) {
-  return `comic-canvas--${style.toLowerCase().replace(/_/g, "-")}`;
-}
-
 function makeEmptyPage(position: number): EditorPage {
   return {
     pageKey: `page_${position}`,
@@ -514,7 +447,7 @@ function ComicDraftPreview({
   const visiblePanelTexts = panelTexts.length > 0 ? panelTexts : [currentPage?.body.trim() || "Текст страницы появится здесь."];
   const panelImages = ensurePanelImageArrayLength(currentPage?.panelImageUrls, Math.max(visiblePanelTexts.length, 1));
   const fallbackPanelImage = resolveAssetUrl(currentPage?.imageUrl) || "/comic-placeholder.svg";
-  const variants = createPreviewTransitionVariants(currentPage?.transitionStyle ?? "SLIDE_LEFT", direction);
+  const variants = createTransitionVariants(currentPage?.transitionStyle ?? "SLIDE_LEFT", direction);
   const panelAnimationClassName = transitionClassName(currentPage?.transitionStyle ?? "SLIDE_LEFT");
 
   const goToPage = (nextIndex: number) => {
@@ -671,7 +604,17 @@ export function ComicEditorPage() {
   const [generatingPageIndex, setGeneratingPageIndex] = useState<number | null>(null);
   const [generatingPanelKey, setGeneratingPanelKey] = useState<string | null>(null);
   const [panelUploadFiles, setPanelUploadFiles] = useState<Record<string, File | null>>({});
-  const [editorView, setEditorView] = useState<"edit" | "preview">("edit");
+  const [generatedVariants, setGeneratedVariants] = useState<Record<number, string[]>>({});
+  const [aiStyle, setAiStyle] = useState("graphic novel, polished inks, cinematic lighting");
+  const [characterGuide, setCharacterGuide] = useState("");
+  const [variantCount, setVariantCount] = useState("1");
+  const [editorView, setEditorView] = useState<"edit" | "graph" | "preview">("edit");
+
+  const generationStatusQuery = useQuery({
+    queryKey: ["image-generation-status"],
+    queryFn: fetchImageGenerationStatus,
+    retry: false
+  });
 
   const setPageField = (pageIndex: number, updater: (page: EditorPage) => EditorPage) => {
     setPages((current) => current.map((page, index) => (index === pageIndex ? updater(page) : page)));
@@ -747,7 +690,8 @@ export function ComicEditorPage() {
   });
 
   const generateImageMutation = useMutation({
-    mutationFn: (prompt: string) => generateComicImage(prompt),
+    mutationFn: ({ prompt, count = 1 }: { prompt: string; count?: number }) =>
+      generateComicImages(prompt, { count }),
     onError: (error: any) => {
       notifications.show({
         title: "Ошибка генерации",
@@ -881,12 +825,17 @@ export function ComicEditorPage() {
       parseDialogPanels(page.body)[0] ??
       "dramatic comic moment";
 
-    return `premium comic illustration, ${pageTitle.toLowerCase()}, ${firstBeat.toLowerCase()}, cinematic composition, polished inking, dramatic lighting, rich colors, detailed background`;
+    return `premium comic illustration, ${pageTitle.toLowerCase()}, ${firstBeat.toLowerCase()}, ${aiStyle}, detailed background`;
   };
 
   const buildPromptFromPanel = (page: EditorPage, panelText: string, panelIndex: number) => {
     const sceneTitle = page.title.trim() || "comic scene";
-    return `premium comic panel, scene ${panelIndex + 1}, ${sceneTitle.toLowerCase()}, ${panelText.toLowerCase()}, dramatic framing, cinematic perspective, rich colors, detailed line art, professional print shading`;
+    return `premium comic panel, scene ${panelIndex + 1}, ${sceneTitle.toLowerCase()}, ${panelText.toLowerCase()}, ${aiStyle}, detailed line art, professional print shading`;
+  };
+
+  const enrichPrompt = (prompt: string) => {
+    const guide = characterGuide.trim();
+    return guide ? `${prompt}. Character consistency guide: ${guide}` : prompt;
   };
 
   const generatePageImage = async (pageIndex: number) => {
@@ -895,16 +844,29 @@ export function ComicEditorPage() {
       return;
     }
 
-    const prompt = (page.sketchPrompt ?? "").trim() || buildPromptFromPage(page);
+    const prompt = enrichPrompt((page.sketchPrompt ?? "").trim() || buildPromptFromPage(page));
     setGeneratingPageIndex(pageIndex);
     try {
-      const generated = await generateImageMutation.mutateAsync(prompt);
+      const generated = await generateImageMutation.mutateAsync({
+        prompt,
+        count: Number(variantCount)
+      });
+      const urls = generated.images.map((image) => image.url);
+      setGeneratedVariants((current) => ({ ...current, [pageIndex]: urls }));
       setPageField(pageIndex, (item) => ({ ...item, imageUrl: generated.url, pendingImageFile: null, sketchPrompt: prompt }));
       notifications.show({
-        title: "Кадр создан",
-        message: "Иллюстрация сгенерирована и подставлена в сцену",
-        color: "dark"
+        title: generated.safetyAdjusted
+          ? "Создан безопасный вариант"
+          : urls.length > 1
+            ? "Варианты созданы"
+            : "Кадр создан",
+        message: generated.safetyAdjusted
+          ? "Исходный prompt был заблокирован. Сцена создана по нейтральному описанию без опасных деталей."
+          : `Получено вариантов: ${urls.length}. Первый вариант выбран для сцены.`,
+        color: generated.safetyAdjusted ? "yellow" : "dark"
       });
+    } catch {
+      // useMutation onError already renders a user-facing notification.
     } finally {
       setGeneratingPageIndex(null);
     }
@@ -916,18 +878,26 @@ export function ComicEditorPage() {
       return;
     }
 
-    const prompt = buildPromptFromPanel(page, panelText, panelIndex);
+    const prompt = enrichPrompt(buildPromptFromPanel(page, panelText, panelIndex));
     const key = `${pageIndex}-${panelIndex}`;
     setGeneratingPanelKey(key);
     try {
-      const generated = await generateImageMutation.mutateAsync(prompt);
+      const generated = await generateImageMutation.mutateAsync({ prompt, count: 1 });
       setPageField(pageIndex, (currentPage) => {
         const panelTexts = parseDialogPanels(currentPage.body);
         const nextUrls = ensurePanelImageArrayLength(currentPage.panelImageUrls, Math.max(panelTexts.length, 1));
         nextUrls[panelIndex] = generated.url;
         return { ...currentPage, panelImageUrls: nextUrls };
       });
-      notifications.show({ title: "Панель готова", message: "Иллюстрация диалога сгенерирована", color: "dark" });
+      notifications.show({
+        title: generated.safetyAdjusted ? "Создан безопасный вариант" : "Панель готова",
+        message: generated.safetyAdjusted
+          ? "Исходный prompt был заблокирован, поэтому использовано нейтральное описание."
+          : "Иллюстрация диалога сгенерирована",
+        color: generated.safetyAdjusted ? "yellow" : "dark"
+      });
+    } catch {
+      // useMutation onError already renders a user-facing notification.
     } finally {
       setGeneratingPanelKey(null);
     }
@@ -961,9 +931,10 @@ export function ComicEditorPage() {
 
       <SegmentedControl
         value={editorView}
-        onChange={(value) => setEditorView(value as "edit" | "preview")}
+        onChange={(value) => setEditorView(value as "edit" | "graph" | "preview")}
         data={[
           { label: "Редактор", value: "edit" },
+          { label: "Граф ветвлений", value: "graph" },
           { label: "Превью", value: "preview" }
         ]}
         color="dark"
@@ -971,6 +942,18 @@ export function ComicEditorPage() {
 
       {editorView === "preview" ? (
         <ComicDraftPreview title={title} summary={summary} coverImageUrl={coverImageUrl} status={status} pages={pages} />
+      ) : editorView === "graph" ? (
+        <Card className="ink-grid" p="lg">
+          <StoryGraph
+            pages={pages}
+            onSelect={(pageKey) => {
+              setEditorView("edit");
+              window.setTimeout(() => {
+                document.getElementById(`editor-page-${pageKey}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 80);
+            }}
+          />
+        </Card>
       ) : (
         <>
       <Card className="ink-grid" p="lg">
@@ -1053,6 +1036,55 @@ export function ComicEditorPage() {
         <Stack>
           <Group justify="space-between" align="center">
             <Title order={3} ff="Bebas Neue" size="2rem">
+              Настройки AI-иллюстраций
+            </Title>
+            <Badge
+              color={generationStatusQuery.data?.configured ? "green" : "red"}
+              variant="light"
+            >
+              {generationStatusQuery.isLoading
+                ? "Проверяем API"
+                : generationStatusQuery.data?.configured
+                  ? `Подключено: ${generationStatusQuery.data.model}`
+                  : "API не настроен"}
+            </Badge>
+          </Group>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 5 }}>
+              <TextInput
+                label="Визуальный стиль"
+                value={aiStyle}
+                onChange={(event) => setAiStyle(event.currentTarget.value)}
+                placeholder="graphic novel, watercolor, retro sci-fi..."
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 5 }}>
+              <TextInput
+                label="Постоянные признаки персонажей"
+                value={characterGuide}
+                onChange={(event) => setCharacterGuide(event.currentTarget.value)}
+                placeholder="Одежда, цвет волос, возраст, отличительные детали"
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 2 }}>
+              <Select
+                label="Вариантов"
+                value={variantCount}
+                onChange={(value) => setVariantCount(value ?? "2")}
+                data={["1", "2", "3", "4"]}
+              />
+            </Grid.Col>
+          </Grid>
+          <Text size="xs" c="dimmed">
+            Стиль и описание персонажей автоматически добавляются ко всем prompt, чтобы сцены выглядели согласованно.
+          </Text>
+        </Stack>
+
+        <Divider my="lg" />
+
+        <Stack>
+          <Group justify="space-between" align="center">
+            <Title order={3} ff="Bebas Neue" size="2rem">
               Сценарий
             </Title>
             <Button variant="light" color="dark" onClick={onGenerateFromScript}>
@@ -1092,7 +1124,7 @@ export function ComicEditorPage() {
           const normalizedPanelImages = ensurePanelImageArrayLength(page.panelImageUrls, panelCount);
 
           return (
-            <Card key={`${page.pageKey}-${pageIndex}`} className="ink-grid" p="md">
+            <Card id={`editor-page-${page.pageKey}`} key={`${page.pageKey}-${pageIndex}`} className="ink-grid editor-page-card" p="md">
               <Stack>
                 <Group justify="space-between">
                   <Group>
@@ -1160,7 +1192,7 @@ export function ComicEditorPage() {
                     <Select
                       label="Переход"
                       value={page.transitionStyle}
-                      data={TRANSITIONS.map((transition) => ({ label: transition, value: transition }))}
+                      data={TRANSITIONS.map((transition) => ({ label: TRANSITION_LABELS[transition], value: transition }))}
                       onChange={(value) =>
                         setPageField(pageIndex, (item) => ({
                           ...item,
@@ -1234,7 +1266,7 @@ export function ComicEditorPage() {
                         </Text>
                         <Grid>
                           {ILLUSTRATION_PRESETS.map((preset) => (
-                            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.url}>
+                            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.id}>
                               <Card withBorder p={6}>
                                 <Stack gap={6}>
                                   <Image
@@ -1305,7 +1337,7 @@ export function ComicEditorPage() {
                       onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: nextValue }))}
                       description="Чем конкретнее персонаж, ракурс и действие, тем лучше кадр."
                     />
-                    <Group mt={8}>
+                      <Group mt={8}>
                       <Button
                         size="xs"
                         variant="light"
@@ -1323,7 +1355,33 @@ export function ComicEditorPage() {
                       >
                         Сгенерировать сцену
                       </Button>
-                    </Group>
+                      </Group>
+                      {(generatedVariants[pageIndex]?.length ?? 0) > 1 && (
+                        <Stack gap={6} mt="sm">
+                          <Text size="xs" fw={700}>
+                            Выберите вариант
+                          </Text>
+                          <div className="generated-variants">
+                            {generatedVariants[pageIndex].map((url, variantIndex) => (
+                              <button
+                                key={url}
+                                type="button"
+                                className={page.imageUrl === url ? "generated-variant is-active" : "generated-variant"}
+                                onClick={() =>
+                                  setPageField(pageIndex, (item) => ({
+                                    ...item,
+                                    imageUrl: url,
+                                    pendingImageFile: null
+                                  }))
+                                }
+                                aria-label={`Выбрать вариант ${variantIndex + 1}`}
+                              >
+                                <img src={resolveAssetUrl(url) ?? "/comic-placeholder.svg"} alt={`Вариант ${variantIndex + 1}`} />
+                              </button>
+                            ))}
+                          </div>
+                        </Stack>
+                      )}
                   </Grid.Col>
                 </Grid>
 
@@ -1423,7 +1481,7 @@ export function ComicEditorPage() {
                             <Group gap={6} wrap="wrap">
                               {ILLUSTRATION_PRESETS.slice(0, 5).map((preset) => (
                                 <Button
-                                  key={`${panelUploadKey}-${preset.url}`}
+                                  key={`${panelUploadKey}-${preset.id}`}
                                   size="xs"
                                   variant="outline"
                                   color="dark"

@@ -9,7 +9,17 @@ export type TransitionStyle =
   | "GLITCH_CUT"
   | "WHIP_PAN"
   | "INK_BLEED"
-  | "PARALLAX_SWEEP";
+  | "PARALLAX_SWEEP"
+  | "ROTATE_IN"
+  | "BLUR_DISSOLVE"
+  | "SHUTTER"
+  | "RIPPLE"
+  | "FLASH"
+  | "PANEL_STAGGER"
+  | "COMIC_BURST"
+  | "TILT_DROP"
+  | "CURTAIN"
+  | "FOCUS_PULL";
 
 export type User = {
   id: string;

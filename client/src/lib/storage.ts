@@ -37,3 +37,16 @@ export function updateAccessToken(accessToken: string) {
 
   setAuthStorage({ ...existing, accessToken });
 }
+
+export function updateAuthTokens(accessToken: string, refreshToken?: string) {
+  const existing = getAuthStorage();
+  if (!existing) {
+    return;
+  }
+
+  setAuthStorage({
+    ...existing,
+    accessToken,
+    refreshToken: refreshToken ?? existing.refreshToken
+  });
+}

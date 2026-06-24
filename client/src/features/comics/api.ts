@@ -1,4 +1,5 @@
-import { api } from "../../lib/api";
+import axios from "axios";
+import { api, refreshAccessToken } from "../../lib/api";
 import { ComicCard, ComicChoice, ComicDetail, ComicPage, ComicReview, ComicWritePayload, ReadComicResponse } from "../../types/api";
 
 export type PublicComicFilters = {
@@ -137,11 +138,59 @@ export async function uploadComicImage(file: File) {
   return response.data;
 }
 
-export async function generateComicImage(prompt: string, size: "1024x1024" | "1024x1536" | "1536x1024" = "1536x1024") {
-  const response = await api.post<{ url: string; filename: string; mimetype: string }>("/uploads/generate", {
-    prompt,
-    size
-  });
+export type GeneratedComicImage = {
+  url: string;
+  filename: string;
+  mimetype: string;
+  revisedPrompt?: string;
+};
 
+export type GeneratedComicImagesResponse = GeneratedComicImage & {
+  images: GeneratedComicImage[];
+  safetyAdjusted?: boolean;
+  usedPrompt?: string;
+};
+
+export async function generateComicImages(
+  prompt: string,
+  options: {
+    size?: "1024x1024" | "1024x1536" | "1536x1024";
+    count?: number;
+  } = {}
+) {
+  const refreshedAccessToken = await refreshAccessToken();
+  if (!refreshedAccessToken) {
+    throw new axios.AxiosError(
+      "Сессия истекла. Войдите в аккаунт снова.",
+      "AUTH_SESSION_EXPIRED",
+      undefined,
+      undefined,
+      {
+        data: { message: "Сессия истекла. Войдите в аккаунт снова." },
+        status: 401,
+        statusText: "Unauthorized",
+        headers: {},
+        config: { headers: {} } as any
+      }
+    );
+  }
+
+  const response = await api.post<GeneratedComicImagesResponse>(
+    "/uploads/generate",
+    {
+      prompt,
+      size: options.size ?? "1536x1024",
+      count: options.count ?? 1
+    },
+    {
+      timeout: 180_000
+    }
+  );
+
+  return response.data;
+}
+
+export async function fetchImageGenerationStatus() {
+  const response = await api.get<{ configured: boolean; model: string }>("/uploads/generate/status");
   return response.data;
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { clearAuthStorage, getAuthStorage, updateAccessToken } from "./storage";
+import { clearAuthStorage, getAuthStorage, updateAuthTokens } from "./storage";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api";
 
@@ -14,6 +14,40 @@ const refreshClient = axios.create({
 });
 
 let refreshPromise: Promise<string | null> | null = null;
+
+function expireSession() {
+  clearAuthStorage();
+  window.dispatchEvent(new CustomEvent("inkflow:auth-expired"));
+}
+
+export async function refreshAccessToken() {
+  const session = getAuthStorage();
+  if (!session?.refreshToken) {
+    expireSession();
+    return null;
+  }
+
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<{ accessToken: string; refreshToken?: string }>("/auth/refresh", {
+        refreshToken: session.refreshToken
+      })
+      .then((response) => {
+        const newAccessToken = response.data.accessToken;
+        updateAuthTokens(newAccessToken, response.data.refreshToken);
+        return newAccessToken;
+      })
+      .catch(() => {
+        expireSession();
+        return null;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
 
 api.interceptors.request.use((config) => {
   const session = getAuthStorage();
@@ -35,34 +69,8 @@ api.interceptors.response.use(
       throw error;
     }
 
-    const session = getAuthStorage();
-    if (!session?.refreshToken) {
-      clearAuthStorage();
-      throw error;
-    }
-
     originalRequest._retry = true;
-
-    if (!refreshPromise) {
-      refreshPromise = refreshClient
-        .post("/auth/refresh", {
-          refreshToken: session.refreshToken
-        })
-        .then((response) => {
-          const newAccessToken = response.data.accessToken as string;
-          updateAccessToken(newAccessToken);
-          return newAccessToken;
-        })
-        .catch(() => {
-          clearAuthStorage();
-          return null;
-        })
-        .finally(() => {
-          refreshPromise = null;
-        });
-    }
-
-    const newAccessToken = await refreshPromise;
+    const newAccessToken = await refreshAccessToken();
     if (!newAccessToken) {
       throw error;
     }

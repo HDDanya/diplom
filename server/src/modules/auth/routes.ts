@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { env } from "../../config/env";
+import { createRateLimit } from "../../utils/rate-limit";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { issueAuthTokens } from "../../utils/tokens";
 
@@ -20,7 +21,23 @@ const refreshSchema = z.object({
 });
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
-  app.post("/register", async (request, reply) => {
+  const registerRateLimit = createRateLimit({
+    max: 5,
+    windowMs: 15 * 60_000,
+    keyPrefix: "register"
+  });
+  const loginRateLimit = createRateLimit({
+    max: 10,
+    windowMs: 15 * 60_000,
+    keyPrefix: "login"
+  });
+  const refreshRateLimit = createRateLimit({
+    max: 30,
+    windowMs: 15 * 60_000,
+    keyPrefix: "refresh"
+  });
+
+  app.post("/register", { preHandler: [registerRateLimit] }, async (request, reply) => {
     const payload = registerSchema.parse(request.body);
 
     const existing = await app.prisma.user.findUnique({ where: { email: payload.email } });
@@ -50,7 +67,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
   });
 
-  app.post("/login", async (request, reply) => {
+  app.post("/login", { preHandler: [loginRateLimit] }, async (request, reply) => {
     const payload = loginSchema.parse(request.body);
 
     const user = await app.prisma.user.findUnique({ where: { email: payload.email } });
@@ -77,7 +94,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
-  app.post("/refresh", async (request, reply) => {
+  app.post("/refresh", { preHandler: [refreshRateLimit] }, async (request, reply) => {
     const { refreshToken } = refreshSchema.parse(request.body);
 
     try {

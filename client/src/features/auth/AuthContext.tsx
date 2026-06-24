@@ -89,6 +89,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     reloadMe().finally(() => setIsBootstrapping(false));
   }, [reloadMe]);
 
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      setUser(null);
+      setAccessToken(null);
+    };
+
+    window.addEventListener("inkflow:auth-expired", handleExpiredSession);
+    return () => window.removeEventListener("inkflow:auth-expired", handleExpiredSession);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
