@@ -22,7 +22,7 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconArrowNarrowDown, IconArrowRight, IconCloudUpload, IconPlayerPlay, IconPlus, IconSparkles, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { StoryGraph } from "../components/StoryGraph";
@@ -243,20 +243,25 @@ type DebouncedInputProps = {
 
 function DebouncedTextInput({ label, value, onCommit, placeholder, required, description, delay = 220 }: DebouncedInputProps) {
   const [draft, setDraft] = useState(value);
+  const onCommitRef = useRef(onCommit);
 
   useEffect(() => {
     setDraft(value);
   }, [value]);
 
   useEffect(() => {
+    onCommitRef.current = onCommit;
+  }, [onCommit]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       if (draft !== value) {
-        onCommit(draft);
+        onCommitRef.current(draft);
       }
     }, delay);
 
     return () => window.clearTimeout(timer);
-  }, [draft, value, onCommit, delay]);
+  }, [draft, value, delay]);
 
   return (
     <TextInput
@@ -265,7 +270,7 @@ function DebouncedTextInput({ label, value, onCommit, placeholder, required, des
       onChange={(event) => setDraft(event.currentTarget.value)}
       onBlur={() => {
         if (draft !== value) {
-          onCommit(draft);
+          onCommitRef.current(draft);
         }
       }}
       placeholder={placeholder}
@@ -287,20 +292,25 @@ function DebouncedTextarea({
   maxRows
 }: DebouncedInputProps & { minRows?: number; maxRows?: number }) {
   const [draft, setDraft] = useState(value);
+  const onCommitRef = useRef(onCommit);
 
   useEffect(() => {
     setDraft(value);
   }, [value]);
 
   useEffect(() => {
+    onCommitRef.current = onCommit;
+  }, [onCommit]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       if (draft !== value) {
-        onCommit(draft);
+        onCommitRef.current(draft);
       }
     }, delay);
 
     return () => window.clearTimeout(timer);
-  }, [draft, value, onCommit, delay]);
+  }, [draft, value, delay]);
 
   return (
     <Textarea
@@ -309,7 +319,7 @@ function DebouncedTextarea({
       onChange={(event) => setDraft(event.currentTarget.value)}
       onBlur={() => {
         if (draft !== value) {
-          onCommit(draft);
+          onCommitRef.current(draft);
         }
       }}
       autosize
@@ -467,6 +477,7 @@ function ComicDraftPreview({
           src={resolveAssetUrl(coverImageUrl) || "/comic-placeholder.svg"}
           alt={title || "Превью комикса"}
           fit="cover"
+          decoding="async"
           fallbackSrc="/comic-placeholder.svg"
           style={{ filter: "contrast(1.06) saturate(1.04)" }}
         />
@@ -609,6 +620,9 @@ export function ComicEditorPage() {
   const [characterGuide, setCharacterGuide] = useState("");
   const [variantCount, setVariantCount] = useState("1");
   const [editorView, setEditorView] = useState<"edit" | "graph" | "preview">("edit");
+  const [expandedTemplatePages, setExpandedTemplatePages] = useState<Record<string, boolean>>({});
+  const [expandedPanelPages, setExpandedPanelPages] = useState<Record<string, boolean>>({});
+  const [expandedEditorPage, setExpandedEditorPage] = useState<string | null>(null);
 
   const generationStatusQuery = useQuery({
     queryKey: ["image-generation-status"],
@@ -947,6 +961,8 @@ export function ComicEditorPage() {
           <StoryGraph
             pages={pages}
             onSelect={(pageKey) => {
+              const pageIndex = pages.findIndex((page) => page.pageKey === pageKey);
+              setExpandedEditorPage(String(pageIndex));
               setEditorView("edit");
               window.setTimeout(() => {
                 document.getElementById(`editor-page-${pageKey}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -980,6 +996,7 @@ export function ComicEditorPage() {
                     radius="sm"
                     h={150}
                     fit="cover"
+                    decoding="async"
                     fallbackSrc="/comic-placeholder.svg"
                     style={{ filter: "contrast(1.06) saturate(1.04)" }}
                   />
@@ -1051,18 +1068,18 @@ export function ComicEditorPage() {
           </Group>
           <Grid>
             <Grid.Col span={{ base: 12, md: 5 }}>
-              <TextInput
+              <DebouncedTextInput
                 label="Визуальный стиль"
                 value={aiStyle}
-                onChange={(event) => setAiStyle(event.currentTarget.value)}
+                onCommit={setAiStyle}
                 placeholder="graphic novel, watercolor, retro sci-fi..."
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 5 }}>
-              <TextInput
+              <DebouncedTextInput
                 label="Постоянные признаки персонажей"
                 value={characterGuide}
-                onChange={(event) => setCharacterGuide(event.currentTarget.value)}
+                onCommit={setCharacterGuide}
                 placeholder="Одежда, цвет волос, возраст, отличительные детали"
               />
             </Grid.Col>
@@ -1122,9 +1139,13 @@ export function ComicEditorPage() {
           const dialogPanels = parseDialogPanels(page.body);
           const panelCount = Math.max(dialogPanels.length, 1);
           const normalizedPanelImages = ensurePanelImageArrayLength(page.panelImageUrls, panelCount);
+          const pageSectionKey = String(pageIndex);
+          const templatesExpanded = Boolean(expandedTemplatePages[pageSectionKey]);
+          const panelsExpanded = Boolean(expandedPanelPages[pageSectionKey]);
+          const pageExpanded = expandedEditorPage === null ? pageIndex === 0 : expandedEditorPage === pageSectionKey;
 
           return (
-            <Card id={`editor-page-${page.pageKey}`} key={`${page.pageKey}-${pageIndex}`} className="ink-grid editor-page-card" p="md">
+            <Card id={`editor-page-${page.pageKey}`} key={pageIndex} className="ink-grid editor-page-card" p="md">
               <Stack>
                 <Group justify="space-between">
                   <Group>
@@ -1132,6 +1153,15 @@ export function ComicEditorPage() {
                     {page.isStart && <Badge variant="outline">Стартовая</Badge>}
                   </Group>
                   <Group>
+                    <Button
+                      variant="outline"
+                      color="dark"
+                      size="xs"
+                      aria-expanded={pageExpanded}
+                      onClick={() => setExpandedEditorPage(pageExpanded ? "" : pageSectionKey)}
+                    >
+                      {pageExpanded ? "Свернуть" : "Редактировать"}
+                    </Button>
                     <Button
                       variant={page.isStart ? "filled" : "light"}
                       color="dark"
@@ -1180,6 +1210,8 @@ export function ComicEditorPage() {
                   </Group>
                 </Group>
 
+                {pageExpanded && (
+                  <Box className="editor-page-card-body">
                 <Grid>
                   <Grid.Col span={{ base: 12, md: 6 }}>
                     <DebouncedTextInput
@@ -1230,6 +1262,7 @@ export function ComicEditorPage() {
 
                 <DebouncedTextarea
                   label="Текст страницы"
+                  description="Разделяйте реплики или фрагменты сцены строкой ---: каждый блок станет отдельной панелью со своей иллюстрацией."
                   value={page.body}
                   minRows={4}
                   onCommit={(nextValue) =>
@@ -1249,7 +1282,12 @@ export function ComicEditorPage() {
                     <Stack gap="xs">
                       {page.imageUrl && (
                         <Box className="editor-scene-preview">
-                          <img src={resolveAssetUrl(page.imageUrl) || "/comic-placeholder.svg"} alt={page.title} />
+                          <img
+                            src={resolveAssetUrl(page.imageUrl) || "/comic-placeholder.svg"}
+                            alt={page.title}
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </Box>
                       )}
                       <FileInput
@@ -1261,54 +1299,71 @@ export function ComicEditorPage() {
                       />
 
                       <Stack gap={6}>
-                        <Text size="xs" c="dimmed">
-                          Универсальные комиксные шаблоны
-                        </Text>
-                        <Grid>
-                          {ILLUSTRATION_PRESETS.map((preset) => (
-                            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.id}>
-                              <Card withBorder p={6}>
-                                <Stack gap={6}>
-                                  <Image
-                                    src={resolveAssetUrl(preset.url) || "/comic-placeholder.svg"}
-                                    alt={preset.label}
-                                    h={56}
-                                    fit="cover"
-                                    radius="sm"
-                                    fallbackSrc="/comic-placeholder.svg"
-                                    style={{ filter: "contrast(1.06) saturate(1.04)" }}
-                                  />
-                                  <Text size="xs" fw={700}>
-                                    {preset.label}
-                                  </Text>
-                                  <Text size="xs" c="dimmed">
-                                    {preset.description}
-                                  </Text>
-                                  <Group gap={6}>
-                                    <Button
-                                      size="xs"
-                                      color="dark"
-                                      variant={page.imageUrl === preset.url ? "filled" : "outline"}
-                                      onClick={() => applyIllustrationTemplate(pageIndex, preset.url)}
-                                    >
-                                      На сцену
-                                    </Button>
-                                    <Button
-                                      size="xs"
-                                      variant="subtle"
-                                      color="dark"
-                                      onClick={() =>
-                                        setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: preset.promptSeed }))
-                                      }
-                                    >
-                                      Prompt
-                                    </Button>
-                                  </Group>
-                                </Stack>
-                              </Card>
-                            </Grid.Col>
-                          ))}
-                        </Grid>
+                        <Button
+                          variant="subtle"
+                          color="dark"
+                          size="xs"
+                          w="fit-content"
+                          rightSection={<IconArrowNarrowDown size={14} />}
+                          aria-expanded={templatesExpanded}
+                          onClick={() =>
+                            setExpandedTemplatePages((current) => ({
+                              ...current,
+                              [pageSectionKey]: !templatesExpanded
+                            }))
+                          }
+                        >
+                          {templatesExpanded ? "Скрыть шаблоны" : `Показать шаблоны (${ILLUSTRATION_PRESETS.length})`}
+                        </Button>
+                        {templatesExpanded && (
+                          <Grid>
+                            {ILLUSTRATION_PRESETS.map((preset) => (
+                              <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={preset.id}>
+                                <Card withBorder p={6}>
+                                  <Stack gap={6}>
+                                    <Image
+                                      src={resolveAssetUrl(preset.url) || "/comic-placeholder.svg"}
+                                      alt={preset.label}
+                                      h={56}
+                                      fit="cover"
+                                      radius="sm"
+                                      loading="lazy"
+                                      decoding="async"
+                                      fallbackSrc="/comic-placeholder.svg"
+                                      style={{ filter: "contrast(1.06) saturate(1.04)" }}
+                                    />
+                                    <Text size="xs" fw={700}>
+                                      {preset.label}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      {preset.description}
+                                    </Text>
+                                    <Group gap={6}>
+                                      <Button
+                                        size="xs"
+                                        color="dark"
+                                        variant={page.imageUrl === preset.url ? "filled" : "outline"}
+                                        onClick={() => applyIllustrationTemplate(pageIndex, preset.url)}
+                                      >
+                                        На сцену
+                                      </Button>
+                                      <Button
+                                        size="xs"
+                                        variant="subtle"
+                                        color="dark"
+                                        onClick={() =>
+                                          setPageField(pageIndex, (item) => ({ ...item, sketchPrompt: preset.promptSeed }))
+                                        }
+                                      >
+                                        Prompt
+                                      </Button>
+                                    </Group>
+                                  </Stack>
+                                </Card>
+                              </Grid.Col>
+                            ))}
+                          </Grid>
+                        )}
                       </Stack>
 
                       <Group>
@@ -1376,7 +1431,12 @@ export function ComicEditorPage() {
                                 }
                                 aria-label={`Выбрать вариант ${variantIndex + 1}`}
                               >
-                                <img src={resolveAssetUrl(url) ?? "/comic-placeholder.svg"} alt={`Вариант ${variantIndex + 1}`} />
+                                <img
+                                  src={resolveAssetUrl(url) ?? "/comic-placeholder.svg"}
+                                  alt={`Вариант ${variantIndex + 1}`}
+                                  loading="lazy"
+                                  decoding="async"
+                                />
                               </button>
                             ))}
                           </div>
@@ -1389,17 +1449,36 @@ export function ComicEditorPage() {
 
                 <Stack gap="sm">
                   <Group justify="space-between" align="center">
-                    <Text fw={700}>Иллюстрации по диалогам (разделитель ---)</Text>
-                    <Badge variant="light" color="dark">
-                      {panelCount} панелей
-                    </Badge>
+                    <Stack gap={2}>
+                      <Text fw={700}>Иллюстрации по диалогам (разделитель ---)</Text>
+                      <Text size="xs" c="dimmed">Раскройте блок только для той страницы, с которой работаете.</Text>
+                    </Stack>
+                    <Group gap="xs">
+                      <Badge variant="light" color="dark">
+                        {panelCount} панелей
+                      </Badge>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        color="dark"
+                        aria-expanded={panelsExpanded}
+                        onClick={() =>
+                          setExpandedPanelPages((current) => ({
+                            ...current,
+                            [pageSectionKey]: !panelsExpanded
+                          }))
+                        }
+                      >
+                        {panelsExpanded ? "Свернуть" : "Редактировать панели"}
+                      </Button>
+                    </Group>
                   </Group>
 
-                  {dialogPanels.length === 0 ? (
+                  {panelsExpanded && dialogPanels.length === 0 ? (
                     <Text size="sm" c="dimmed">
                       Добавьте текст и разделители --- чтобы редактировать иллюстрации каждой панели.
                     </Text>
-                  ) : (
+                  ) : panelsExpanded ? (
                     dialogPanels.map((panelText, panelIndex) => {
                       const panelUploadKey = `${pageIndex}-${panelIndex}`;
                       const panelImageUrl = normalizedPanelImages[panelIndex] || page.imageUrl || "";
@@ -1432,6 +1511,8 @@ export function ComicEditorPage() {
                               <img
                                 src={resolveAssetUrl(panelImageUrl) || "/comic-placeholder.svg"}
                                 alt={`panel-${panelIndex + 1}`}
+                                loading="lazy"
+                                decoding="async"
                               />
                             </Box>
 
@@ -1495,7 +1576,7 @@ export function ComicEditorPage() {
                         </Card>
                       );
                     })
-                  )}
+                  ) : null}
                 </Stack>
 
                 <Divider />
@@ -1568,6 +1649,8 @@ export function ComicEditorPage() {
                     </Box>
                   ))}
                 </Stack>
+                  </Box>
+                )}
               </Stack>
             </Card>
           );

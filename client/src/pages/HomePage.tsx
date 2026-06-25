@@ -56,24 +56,35 @@ export function HomePage() {
   });
 
   return (
-    <Stack gap="lg">
-      <Stack gap={6}>
-        <Title order={1} ff="Bebas Neue" size="3rem">
-          Интерактивные комиксы
+    <Stack gap="xl" className="catalog-page">
+      <Box className="catalog-hero">
+        <Stack gap={8}>
+          <Badge className="comic-kicker" w="fit-content">Библиотека InkFlow</Badge>
+          <Title order={1}>
+            Каталог историй
+          </Title>
+          <Text c="dimmed" maw={720}>
+            Выберите вселенную, войдите в первую сцену и решите, куда повернёт сюжет. Здесь собраны истории с
+            развилками, альтернативными финалами и живыми переходами.
+          </Text>
+        </Stack>
+        <Box className="catalog-hero-stamp" aria-hidden="true">ЧИТАЙ!</Box>
+      </Box>
+
+      <Stack gap="md">
+        <Title order={2} size="2rem">
+          Найдите следующий выпуск
         </Title>
-        <Text c="dimmed" maw={720}>
-          Исследуйте истории с ветвящимся сюжетом. Каждый выбор меняет маршрут, а анимированные переходы создают
-          эффект живого перелистывания страниц.
-        </Text>
+        <TextInput
+          className="catalog-search"
+          size="md"
+          placeholder="Найти комикс по названию или описанию"
+          leftSection={<IconSearch size={18} />}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+        />
       </Stack>
 
-      <TextInput
-        placeholder="Найти комикс по названию или описанию"
-        leftSection={<IconSearch size={16} />}
-        onChange={(event) => setSearch(event.currentTarget.value)}
-      />
-
-      <Card withBorder radius="md" p="md">
+      <Card withBorder radius="md" p="md" className="catalog-filter-card">
         <Box className="catalog-filter-grid">
           <Box className="catalog-filter-author">
             <TextInput
@@ -140,7 +151,7 @@ export function HomePage() {
         </Box>
       </Card>
 
-      <Grid>
+      <Grid gutter={{ base: 24, md: 30 }}>
         {comicsQuery.isLoading
           ? Array.from({ length: 6 }).map((_, index) => (
               <Grid.Col span={{ base: 12, md: 6 }} key={index}>

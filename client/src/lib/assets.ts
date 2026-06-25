@@ -1,5 +1,5 @@
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api";
-const apiOrigin = new URL(apiUrl).origin;
+const apiOrigin = new URL(apiUrl, window.location.origin).origin;
 
 export function resolveAssetUrl(path?: string | null) {
   if (!path) {

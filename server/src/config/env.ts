@@ -25,7 +25,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(10),
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL: z.string().default("7d"),
-  CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
+  CLIENT_ORIGIN: z.string().url().optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_IMAGE_MODEL: z.string().min(1).default("gpt-image-1"),
   OPENAI_IMAGE_QUALITY: z.enum(["low", "medium", "high"]).default("medium"),

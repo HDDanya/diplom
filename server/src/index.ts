@@ -35,10 +35,12 @@ export async function buildServer() {
     },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   });
-  await app.register(cors, {
-    origin: env.CLIENT_ORIGIN,
-    credentials: true
-  });
+  if (env.CLIENT_ORIGIN) {
+    await app.register(cors, {
+      origin: env.CLIENT_ORIGIN,
+      credentials: true
+    });
+  }
 
   await app.register(jwt, { secret: env.JWT_ACCESS_SECRET });
   await app.register(multipart, {
@@ -53,7 +55,10 @@ export async function buildServer() {
   await app.register(fastifyStatic, {
     root: uploadsRoot,
     prefix: "/uploads/",
-    decorateReply: false
+    decorateReply: false,
+    cacheControl: true,
+    maxAge: "7d",
+    immutable: true
   });
 
   await app.register(prismaPlugin);
@@ -99,6 +104,25 @@ export async function buildServer() {
   await app.register(authRoutes, { prefix: "/api/auth" });
   await app.register(uploadsRoutes, { prefix: "/api/uploads" });
   await app.register(comicsRoutes, { prefix: "/api/comics" });
+
+  if (env.NODE_ENV === "production") {
+    const clientDistRoot = path.resolve(process.cwd(), "../client/dist");
+    await app.register(fastifyStatic, {
+      root: clientDistRoot,
+      prefix: "/",
+      wildcard: false,
+      cacheControl: true,
+      maxAge: "1h"
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith("/api/") || request.url.startsWith("/uploads/")) {
+        return reply.code(404).send({ message: "Маршрут не найден" });
+      }
+
+      return reply.type("text/html").sendFile("index.html");
+    });
+  }
 
   app.setErrorHandler((error: any, request, reply) => {
     if (error instanceof ZodError) {

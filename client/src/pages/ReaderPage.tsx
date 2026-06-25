@@ -115,7 +115,7 @@ export function ReaderPage() {
       <Center h="60vh">
         <Stack align="center">
           <Text c="dimmed">Не удалось открыть комикс</Text>
-          <Button component={Link} to="/" color="dark">
+          <Button component={Link} to="/catalog" color="dark">
             В каталог
           </Button>
         </Stack>

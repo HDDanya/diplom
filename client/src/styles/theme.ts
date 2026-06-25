@@ -7,7 +7,7 @@ export const theme = createTheme({
     fontFamily: '"Bebas Neue", "Space Grotesk", sans-serif'
   },
   radius: {
-    md: "0.75rem"
+    md: "0.4rem"
   },
   defaultRadius: "md",
   colors: {

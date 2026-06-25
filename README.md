@@ -111,6 +111,15 @@ pnpm dev
 - frontend: `http://localhost:5173`
 - backend: `http://localhost:4000`
 
+## Публичный деплой
+
+Репозиторий содержит `render.yaml` для развёртывания frontend, API, PostgreSQL и постоянного диска одним Blueprint:
+
+[Deploy to Render](https://dashboard.render.com/blueprint/new?repo=https://github.com/HDDanya/diplom)
+
+При создании Blueprint укажите `OPENAI_API_KEY`. Остальные секреты генерируются автоматически. Production-сервис
+работает на одном домене: Fastify отдаёт React SPA, `/api` и `/uploads`.
+
 ## Проверка
 
 ```bash
