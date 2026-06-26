@@ -231,6 +231,24 @@ type EditorPage = ComicWritePage & {
   pendingImageFile: File | null;
 };
 
+type ChoiceValidationErrors = {
+  label?: string;
+  targetPageKey?: string;
+};
+
+type PageValidationErrors = {
+  pageKey?: string;
+  title?: string;
+  body?: string;
+  choices?: Record<number, ChoiceValidationErrors>;
+};
+
+type EditorValidationErrors = {
+  title?: string;
+  summary?: string;
+  pages: Record<number, PageValidationErrors>;
+};
+
 type DebouncedInputProps = {
   label: string;
   value: string;
@@ -238,10 +256,11 @@ type DebouncedInputProps = {
   placeholder?: string;
   required?: boolean;
   description?: string;
+  error?: string;
   delay?: number;
 };
 
-function DebouncedTextInput({ label, value, onCommit, placeholder, required, description, delay = 220 }: DebouncedInputProps) {
+function DebouncedTextInput({ label, value, onCommit, placeholder, required, description, error, delay = 220 }: DebouncedInputProps) {
   const [draft, setDraft] = useState(value);
   const onCommitRef = useRef(onCommit);
 
@@ -276,6 +295,7 @@ function DebouncedTextInput({ label, value, onCommit, placeholder, required, des
       placeholder={placeholder}
       required={required}
       description={description}
+      error={error}
     />
   );
 }
@@ -287,6 +307,7 @@ function DebouncedTextarea({
   placeholder,
   required,
   description,
+  error,
   delay = 220,
   minRows = 3,
   maxRows
@@ -328,6 +349,7 @@ function DebouncedTextarea({
       placeholder={placeholder}
       required={required}
       description={description}
+      error={error}
     />
   );
 }
@@ -361,6 +383,135 @@ function makeEmptyPage(position: number): EditorPage {
     isStart: position === 1,
     choices: [],
     pendingImageFile: null
+  };
+}
+
+function emptyValidationErrors(): EditorValidationErrors {
+  return { pages: {} };
+}
+
+function hasPageValidationErrors(pageErrors?: PageValidationErrors) {
+  return Boolean(
+    pageErrors?.pageKey ||
+      pageErrors?.title ||
+      pageErrors?.body ||
+      Object.values(pageErrors?.choices ?? {}).some((choiceErrors) => choiceErrors.label || choiceErrors.targetPageKey)
+  );
+}
+
+function countValidationErrors(errors: EditorValidationErrors) {
+  let count = 0;
+
+  if (errors.title) {
+    count += 1;
+  }
+  if (errors.summary) {
+    count += 1;
+  }
+
+  Object.values(errors.pages).forEach((pageErrors) => {
+    if (pageErrors.pageKey) {
+      count += 1;
+    }
+    if (pageErrors.title) {
+      count += 1;
+    }
+    if (pageErrors.body) {
+      count += 1;
+    }
+    Object.values(pageErrors.choices ?? {}).forEach((choiceErrors) => {
+      if (choiceErrors.label) {
+        count += 1;
+      }
+      if (choiceErrors.targetPageKey) {
+        count += 1;
+      }
+    });
+  });
+
+  return count;
+}
+
+function validateEditorDraft(title: string, summary: string, pages: EditorPage[]) {
+  const errors = emptyValidationErrors();
+  const pageKeyCounts = new Map<string, number>();
+  const validPageKeys = new Set<string>();
+
+  pages.forEach((page) => {
+    const pageKey = page.pageKey.trim();
+    if (!pageKey) {
+      return;
+    }
+
+    pageKeyCounts.set(pageKey, (pageKeyCounts.get(pageKey) ?? 0) + 1);
+    validPageKeys.add(pageKey);
+  });
+
+  if (title.trim().length < 2) {
+    errors.title = "Укажите название минимум из 2 символов";
+  }
+
+  if (summary.trim().length < 10) {
+    errors.summary = "Добавьте краткое описание минимум из 10 символов";
+  }
+
+  pages.forEach((page, pageIndex) => {
+    const pageErrors: PageValidationErrors = {};
+    const pageKey = page.pageKey.trim();
+
+    if (!pageKey) {
+      pageErrors.pageKey = "Укажите ключ страницы";
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(pageKey)) {
+      pageErrors.pageKey = "Используйте латиницу, цифры, _ или -";
+    } else if ((pageKeyCounts.get(pageKey) ?? 0) > 1) {
+      pageErrors.pageKey = "Ключ страницы должен быть уникальным";
+    }
+
+    if (!page.title.trim()) {
+      pageErrors.title = "Укажите заголовок страницы";
+    }
+
+    if (!page.body.trim()) {
+      pageErrors.body = "Добавьте текст страницы";
+    }
+
+    page.choices.forEach((choice, choiceIndex) => {
+      const hasChoiceData = Boolean(choice.label.trim() || choice.targetPageKey.trim());
+      if (!hasChoiceData) {
+        return;
+      }
+
+      const choiceErrors: ChoiceValidationErrors = {};
+      if (!choice.label.trim()) {
+        choiceErrors.label = "Введите текст выбора";
+      }
+      if (!choice.targetPageKey.trim()) {
+        choiceErrors.targetPageKey = "Выберите страницу перехода";
+      } else if (!validPageKeys.has(choice.targetPageKey.trim())) {
+        choiceErrors.targetPageKey = "Такой страницы нет";
+      }
+
+      if (choiceErrors.label || choiceErrors.targetPageKey) {
+        pageErrors.choices = {
+          ...(pageErrors.choices ?? {}),
+          [choiceIndex]: choiceErrors
+        };
+      }
+    });
+
+    if (hasPageValidationErrors(pageErrors)) {
+      errors.pages[pageIndex] = pageErrors;
+    }
+  });
+
+  const firstPageIndex = Object.keys(errors.pages)
+    .map(Number)
+    .sort((left, right) => left - right)[0];
+
+  return {
+    errors,
+    errorCount: countValidationErrors(errors),
+    firstPageIndex: Number.isFinite(firstPageIndex) ? firstPageIndex : null
   };
 }
 
@@ -623,6 +774,7 @@ export function ComicEditorPage() {
   const [expandedTemplatePages, setExpandedTemplatePages] = useState<Record<string, boolean>>({});
   const [expandedPanelPages, setExpandedPanelPages] = useState<Record<string, boolean>>({});
   const [expandedEditorPage, setExpandedEditorPage] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<EditorValidationErrors>(() => emptyValidationErrors());
 
   const generationStatusQuery = useQuery({
     queryKey: ["image-generation-status"],
@@ -632,6 +784,80 @@ export function ComicEditorPage() {
 
   const setPageField = (pageIndex: number, updater: (page: EditorPage) => EditorPage) => {
     setPages((current) => current.map((page, index) => (index === pageIndex ? updater(page) : page)));
+  };
+
+  const clearFieldValidationError = (field: "title" | "summary") => {
+    setValidationErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const clearPageValidationError = (pageIndex: number, field: "pageKey" | "title" | "body") => {
+    setValidationErrors((current) => {
+      const pageErrors = current.pages[pageIndex];
+      if (!pageErrors?.[field]) {
+        return current;
+      }
+
+      const nextPageErrors = { ...pageErrors };
+      delete nextPageErrors[field];
+
+      const nextPages = { ...current.pages };
+      if (hasPageValidationErrors(nextPageErrors)) {
+        nextPages[pageIndex] = nextPageErrors;
+      } else {
+        delete nextPages[pageIndex];
+      }
+
+      return { ...current, pages: nextPages };
+    });
+  };
+
+  const clearChoiceValidationError = (
+    pageIndex: number,
+    choiceIndex: number,
+    field: keyof ChoiceValidationErrors
+  ) => {
+    setValidationErrors((current) => {
+      const pageErrors = current.pages[pageIndex];
+      const choiceErrors = pageErrors?.choices?.[choiceIndex];
+      if (!choiceErrors?.[field]) {
+        return current;
+      }
+
+      const nextChoiceErrors = { ...choiceErrors };
+      delete nextChoiceErrors[field];
+
+      const nextChoices = { ...(pageErrors.choices ?? {}) };
+      if (nextChoiceErrors.label || nextChoiceErrors.targetPageKey) {
+        nextChoices[choiceIndex] = nextChoiceErrors;
+      } else {
+        delete nextChoices[choiceIndex];
+      }
+
+      let nextPageErrors: PageValidationErrors;
+      if (Object.keys(nextChoices).length === 0) {
+        const { choices: _choices, ...restPageErrors } = pageErrors;
+        nextPageErrors = restPageErrors;
+      } else {
+        nextPageErrors = { ...pageErrors, choices: nextChoices };
+      }
+
+      const nextPages = { ...current.pages };
+      if (hasPageValidationErrors(nextPageErrors)) {
+        nextPages[pageIndex] = nextPageErrors;
+      } else {
+        delete nextPages[pageIndex];
+      }
+
+      return { ...current, pages: nextPages };
+    });
   };
 
   useEffect(() => {
@@ -647,28 +873,44 @@ export function ComicEditorPage() {
     const normalized = fromComicDetail(comicQuery.data);
     setStatus(normalized.status);
     setPages(normalized.pages.length > 0 ? normalized.pages : [makeEmptyPage(1)]);
+    setValidationErrors(emptyValidationErrors());
     setHydrated(true);
   }, [comicQuery.data, hydrated]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        title,
-        summary,
-        script,
-        coverImageUrl,
+        title: title.trim(),
+        summary: summary.trim(),
+        script: script.trim(),
+        coverImageUrl: coverImageUrl.trim(),
         status,
         pages: pages.map((page, index) => {
           const { pendingImageFile, ...cleanPage } = page;
           return {
             ...cleanPage,
+            pageKey: cleanPage.pageKey.trim(),
+            title: cleanPage.title.trim(),
+            body: cleanPage.body.trim(),
             position: index + 1,
             imageUrl: cleanPage.imageUrl?.trim() || undefined,
             panelImageUrls: (cleanPage.panelImageUrls ?? []).map((item) => item.trim()).filter(Boolean),
             sketchPrompt: cleanPage.sketchPrompt?.trim() || undefined,
-            choices: cleanPage.choices.filter((choice) => choice.label.trim() && choice.targetPageKey.trim())
+            choices: cleanPage.choices
+              .filter((choice) => choice.label.trim() && choice.targetPageKey.trim())
+              .map((choice) => ({
+                label: choice.label.trim(),
+                targetPageKey: choice.targetPageKey.trim()
+              }))
           };
         })
+      } satisfies {
+        title: string;
+        summary: string;
+        script: string;
+        coverImageUrl: string;
+        status: ComicStatus;
+        pages: ComicWritePage[];
       };
 
       if (isEditing && comicQuery.data) {
@@ -691,6 +933,37 @@ export function ComicEditorPage() {
       });
     }
   });
+
+  const handleSave = () => {
+    const validation = validateEditorDraft(title, summary, pages);
+
+    if (validation.errorCount > 0) {
+      setValidationErrors(validation.errors);
+      setEditorView("edit");
+
+      if (validation.errors.title || validation.errors.summary) {
+        window.setTimeout(() => {
+          document.getElementById("comic-metadata-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      } else if (validation.firstPageIndex !== null) {
+        const page = pages[validation.firstPageIndex];
+        setExpandedEditorPage(String(validation.firstPageIndex));
+        window.setTimeout(() => {
+          document.getElementById(`editor-page-${page?.pageKey}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      }
+
+      notifications.show({
+        title: "Заполните обязательные поля",
+        message: `Исправьте ошибки в форме: ${validation.errorCount}`,
+        color: "red"
+      });
+      return;
+    }
+
+    setValidationErrors(emptyValidationErrors());
+    saveMutation.mutate();
+  };
 
   const uploadImageMutation = useMutation({
     mutationFn: uploadComicImage,
@@ -748,6 +1021,7 @@ export function ComicEditorPage() {
     }
 
     setPages(buildPagesFromScript(script));
+    setValidationErrors(emptyValidationErrors());
     notifications.show({
       title: "Черновик страниц создан",
       message: "Структура построена из сценария. Проверьте и отредактируйте ветки.",
@@ -817,6 +1091,15 @@ export function ComicEditorPage() {
         transitionStyle: template.transitionStyle,
         panelImageUrls: panelUrls
       };
+    });
+    setValidationErrors((current) => {
+      if (!current.pages[pageIndex]) {
+        return current;
+      }
+
+      const nextPages = { ...current.pages };
+      delete nextPages[pageIndex];
+      return { ...current, pages: nextPages };
     });
   };
 
@@ -937,7 +1220,7 @@ export function ComicEditorPage() {
               Опубликовать
             </Button>
           )}
-          <Button color="dark" onClick={() => saveMutation.mutate()} loading={saveMutation.isPending}>
+          <Button color="dark" onClick={handleSave} loading={saveMutation.isPending}>
             Сохранить
           </Button>
         </Group>
@@ -972,15 +1255,28 @@ export function ComicEditorPage() {
         </Card>
       ) : (
         <>
-      <Card className="ink-grid" p="lg">
+      <Card id="comic-metadata-card" className="ink-grid" p="lg">
         <Grid>
           <Grid.Col span={{ base: 12, md: 7 }}>
             <Stack>
-              <DebouncedTextInput label="Название" value={title} onCommit={setTitle} required />
+              <DebouncedTextInput
+                label="Название"
+                value={title}
+                onCommit={(nextValue) => {
+                  setTitle(nextValue);
+                  clearFieldValidationError("title");
+                }}
+                error={validationErrors.title}
+                required
+              />
               <DebouncedTextarea
                 label="Краткое описание"
                 value={summary}
-                onCommit={setSummary}
+                onCommit={(nextValue) => {
+                  setSummary(nextValue);
+                  clearFieldValidationError("summary");
+                }}
+                error={validationErrors.summary}
                 minRows={3}
                 required
               />
@@ -1129,7 +1425,10 @@ export function ComicEditorPage() {
             variant="outline"
             color="dark"
             leftSection={<IconPlus size={16} />}
-            onClick={() => setPages((current) => [...current, makeEmptyPage(current.length + 1)])}
+            onClick={() => {
+              setValidationErrors(emptyValidationErrors());
+              setPages((current) => [...current, makeEmptyPage(current.length + 1)]);
+            }}
           >
             Добавить страницу
           </Button>
@@ -1143,6 +1442,7 @@ export function ComicEditorPage() {
           const templatesExpanded = Boolean(expandedTemplatePages[pageSectionKey]);
           const panelsExpanded = Boolean(expandedPanelPages[pageSectionKey]);
           const pageExpanded = expandedEditorPage === null ? pageIndex === 0 : expandedEditorPage === pageSectionKey;
+          const pageValidationErrors = validationErrors.pages[pageIndex] ?? {};
 
           return (
             <Card id={`editor-page-${page.pageKey}`} key={pageIndex} className="ink-grid editor-page-card" p="md">
@@ -1185,6 +1485,7 @@ export function ComicEditorPage() {
                           return;
                         }
 
+                        setValidationErrors(emptyValidationErrors());
                         setPages((current) => {
                           const removed = current[pageIndex];
                           const next = current
@@ -1217,7 +1518,11 @@ export function ComicEditorPage() {
                     <DebouncedTextInput
                       label="Ключ страницы"
                       value={page.pageKey}
-                      onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, pageKey: nextValue }))}
+                      onCommit={(nextValue) => {
+                        setPageField(pageIndex, (item) => ({ ...item, pageKey: nextValue }));
+                        clearPageValidationError(pageIndex, "pageKey");
+                      }}
+                      error={pageValidationErrors.pageKey}
                     />
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, md: 6 }}>
@@ -1257,7 +1562,11 @@ export function ComicEditorPage() {
                 <DebouncedTextInput
                   label="Заголовок"
                   value={page.title}
-                  onCommit={(nextValue) => setPageField(pageIndex, (item) => ({ ...item, title: nextValue }))}
+                  onCommit={(nextValue) => {
+                    setPageField(pageIndex, (item) => ({ ...item, title: nextValue }));
+                    clearPageValidationError(pageIndex, "title");
+                  }}
+                  error={pageValidationErrors.title}
                 />
 
                 <DebouncedTextarea
@@ -1265,7 +1574,9 @@ export function ComicEditorPage() {
                   description="Разделяйте реплики или фрагменты сцены строкой ---: каждый блок станет отдельной панелью со своей иллюстрацией."
                   value={page.body}
                   minRows={4}
-                  onCommit={(nextValue) =>
+                  error={pageValidationErrors.body}
+                  onCommit={(nextValue) => {
+                    clearPageValidationError(pageIndex, "body");
                     setPageField(pageIndex, (item) => {
                       const panelCountFromBody = Math.max(parseDialogPanels(nextValue).length, 1);
                       return {
@@ -1273,8 +1584,8 @@ export function ComicEditorPage() {
                         body: nextValue,
                         panelImageUrls: ensurePanelImageArrayLength(item.panelImageUrls, panelCountFromBody)
                       };
-                    })
-                  }
+                    });
+                  }}
                 />
 
                 <Grid>
@@ -1586,12 +1897,13 @@ export function ComicEditorPage() {
                     variant="subtle"
                     color="dark"
                     leftSection={<IconArrowNarrowDown size={16} />}
-                    onClick={() =>
+                    onClick={() => {
+                      setValidationErrors(emptyValidationErrors());
                       setPageField(pageIndex, (item) => ({
                         ...item,
                         choices: [...item.choices, { label: "Новый выбор", targetPageKey: "" }]
-                      }))
-                    }
+                      }));
+                    }}
                   >
                     Добавить выбор
                   </Button>
@@ -1605,14 +1917,16 @@ export function ComicEditorPage() {
                           <DebouncedTextInput
                             label={`Текст выбора ${choiceIndex + 1}`}
                             value={choice.label}
-                            onCommit={(nextValue) =>
+                            onCommit={(nextValue) => {
                               setPageField(pageIndex, (item) => ({
                                 ...item,
                                 choices: item.choices.map((itemChoice, indexChoice) =>
                                   indexChoice === choiceIndex ? { ...itemChoice, label: nextValue } : itemChoice
                                 )
-                              }))
-                            }
+                              }));
+                              clearChoiceValidationError(pageIndex, choiceIndex, "label");
+                            }}
+                            error={pageValidationErrors.choices?.[choiceIndex]?.label}
                           />
                         </Grid.Col>
                         <Grid.Col span={{ base: 12, md: 5 }}>
@@ -1620,14 +1934,16 @@ export function ComicEditorPage() {
                             label="Переход к странице"
                             value={choice.targetPageKey}
                             data={pageKeyOptions}
-                            onChange={(value) =>
+                            error={pageValidationErrors.choices?.[choiceIndex]?.targetPageKey}
+                            onChange={(value) => {
                               setPageField(pageIndex, (item) => ({
                                 ...item,
                                 choices: item.choices.map((itemChoice, indexChoice) =>
                                   indexChoice === choiceIndex ? { ...itemChoice, targetPageKey: value ?? "" } : itemChoice
                                 )
-                              }))
-                            }
+                              }));
+                              clearChoiceValidationError(pageIndex, choiceIndex, "targetPageKey");
+                            }}
                           />
                         </Grid.Col>
                         <Grid.Col span={{ base: 12, md: 2 }}>
@@ -1635,12 +1951,13 @@ export function ComicEditorPage() {
                             variant="light"
                             color="red"
                             fullWidth
-                            onClick={() =>
+                            onClick={() => {
+                              setValidationErrors(emptyValidationErrors());
                               setPageField(pageIndex, (item) => ({
                                 ...item,
                                 choices: item.choices.filter((_, idx) => idx !== choiceIndex)
-                              }))
-                            }
+                              }));
+                            }}
                           >
                             Удалить
                           </Button>

@@ -18,7 +18,6 @@ candidateEnvPaths.forEach((envPath) => {
 });
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(4000),
   DATABASE_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(10),
@@ -30,11 +29,7 @@ const envSchema = z.object({
   OPENAI_IMAGE_MODEL: z.string().min(1).default("gpt-image-1"),
   OPENAI_IMAGE_QUALITY: z.enum(["low", "medium", "high"]).default("medium"),
   OPENAI_IMAGE_MODERATION: z.enum(["auto", "low"]).default("low"),
-  OPENAI_TIMEOUT_MS: z.coerce.number().int().min(10_000).max(300_000).default(120_000),
-  READ_ONLY_DEMO: z
-    .enum(["true", "false"])
-    .default("false")
-    .transform((value) => value === "true")
+  OPENAI_TIMEOUT_MS: z.coerce.number().int().min(10_000).max(300_000).default(120_000)
 });
 
 export const env = envSchema.parse(process.env);

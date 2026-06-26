@@ -13,7 +13,6 @@
     "format": "echo 'Use your preferred formatter'",
     "db:generate": "node scripts/run-prisma.cjs generate",
     "db:migrate": "node scripts/run-prisma.cjs migrate dev",
-    "db:deploy": "node scripts/deploy.cjs",
     "db:seed": "node scripts/run-seed.cjs"
   },
   "dependencies": {

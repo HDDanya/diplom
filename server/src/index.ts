@@ -74,17 +74,6 @@ export async function buildServer() {
   app.addHook("onRequest", async (request, reply) => {
     requestStartedAt.set(request, performance.now());
     reply.header("x-request-id", request.id);
-
-    if (
-      env.READ_ONLY_DEMO &&
-      !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
-      !["/api/auth/login", "/api/auth/refresh"].includes(request.url.split("?")[0])
-    ) {
-      return reply.code(403).send({
-        message: "Публичная демо-версия работает только для просмотра",
-        code: "READ_ONLY_DEMO"
-      });
-    }
   });
 
   app.addHook("onResponse", async (request, reply) => {
@@ -115,25 +104,6 @@ export async function buildServer() {
   await app.register(authRoutes, { prefix: "/api/auth" });
   await app.register(uploadsRoutes, { prefix: "/api/uploads" });
   await app.register(comicsRoutes, { prefix: "/api/comics" });
-
-  if (env.NODE_ENV === "production") {
-    const clientDistRoot = path.resolve(process.cwd(), "../client/dist");
-    await app.register(fastifyStatic, {
-      root: clientDistRoot,
-      prefix: "/",
-      wildcard: false,
-      cacheControl: true,
-      maxAge: "1h"
-    });
-
-    app.setNotFoundHandler((request, reply) => {
-      if (request.url.startsWith("/api/") || request.url.startsWith("/uploads/")) {
-        return reply.code(404).send({ message: "Маршрут не найден" });
-      }
-
-      return reply.type("text/html").sendFile("index.html");
-    });
-  }
 
   app.setErrorHandler((error: any, request, reply) => {
     if (error instanceof ZodError) {
