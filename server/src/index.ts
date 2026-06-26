@@ -74,6 +74,17 @@ export async function buildServer() {
   app.addHook("onRequest", async (request, reply) => {
     requestStartedAt.set(request, performance.now());
     reply.header("x-request-id", request.id);
+
+    if (
+      env.READ_ONLY_DEMO &&
+      !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+      !["/api/auth/login", "/api/auth/refresh"].includes(request.url.split("?")[0])
+    ) {
+      return reply.code(403).send({
+        message: "Публичная демо-версия работает только для просмотра",
+        code: "READ_ONLY_DEMO"
+      });
+    }
   });
 
   app.addHook("onResponse", async (request, reply) => {

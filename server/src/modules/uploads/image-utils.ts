@@ -96,10 +96,26 @@ export function normalizeOpenAIError(
   }
 
   if (status === 403) {
+    const accessDenied =
+      !detail ||
+      /access|permission|not available|not enabled|organization verification|verify your organization|verified organization|project/i.test(
+        detail
+      );
+
+    if (!accessDenied) {
+      return {
+        statusCode: 403,
+        code: "OPENAI_FORBIDDEN",
+        message: `OpenAI отклонил запрос генерации: ${detail}${requestSuffix}`
+      };
+    }
+
     return {
       statusCode: 403,
       code: "OPENAI_ACCESS_DENIED",
-      message: "У проекта OpenAI нет доступа к модели изображений. Проверьте права проекта и верификацию организации."
+      message: detail
+        ? `OpenAI отказал в доступе к модели изображений: ${detail}${requestSuffix}`
+        : "У проекта OpenAI нет доступа к модели изображений. Проверьте права проекта и верификацию организации."
     };
   }
 

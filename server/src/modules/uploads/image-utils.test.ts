@@ -20,6 +20,17 @@ describe("image upload security", () => {
   it("maps OpenAI auth and quota failures to actionable safe messages", () => {
     expect(normalizeOpenAIError(401).code).toBe("OPENAI_INVALID_KEY");
     expect(normalizeOpenAIError(403).code).toBe("OPENAI_ACCESS_DENIED");
+    expect(
+      normalizeOpenAIError(403, "Project does not have access to model gpt-image-1.").code
+    ).toBe("OPENAI_ACCESS_DENIED");
+    expect(
+      normalizeOpenAIError(403, "This prompt cannot be used for image generation.", {
+        requestId: "req_forbidden"
+      })
+    ).toMatchObject({
+      code: "OPENAI_FORBIDDEN",
+      statusCode: 403
+    });
     expect(normalizeOpenAIError(429).code).toBe("OPENAI_QUOTA");
     expect(normalizeOpenAIError(500, "provider exploded").message).toContain("provider exploded");
   });
